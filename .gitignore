@@ -1,4 +1,15 @@
-node_modules/
-artifacts/
-cache/
-typechain-types/
+node_modules
+.env
+cache
+artifacts
+typechain-types
+coverage
+coverage.json
+dist
+
+# --- Added for extra security ---
+.env.*
+*.secret
+*.key
+ignition/deployments/
+# --------------------------------
