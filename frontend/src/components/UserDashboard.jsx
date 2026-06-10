@@ -21,7 +21,7 @@ const YIELD_SOURCE_ABI = [
 
 export default function UserDashboard() {
   const { account, balance, isCorrectChain, connect, isConnecting, getSigner } = useWallet();
-  const { liquidity, receipts, error } = useSomnia();
+  const { liquidity, receipts, error, coordinatorAddress, coordinatorBalance } = useSomnia();
   const history = useUserHistory(account);
   const [intentText, setIntentText] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
@@ -101,6 +101,33 @@ export default function UserDashboard() {
     }
   };
 
+  const [isFunding, setIsFunding] = useState(false);
+  const [fundingTx, setFundingTx] = useState(null);
+
+  const handleFundSwarm = async () => {
+    if (!coordinatorAddress) return;
+    setIsFunding(true);
+    setFundingTx(null);
+    try {
+      const signer = await getSigner();
+      const tx = await signer.sendTransaction({
+        to: coordinatorAddress,
+        value: parseEther("1.0")
+      });
+      setFundingTx({ hash: tx.hash, status: 'Pending...' });
+      await tx.wait();
+      setFundingTx({ hash: tx.hash, status: 'Confirmed! ✅' });
+    } catch (err) {
+      console.error(err);
+      if (err.code !== 'ACTION_REJECTED') {
+        alert(`Funding failed: ${err.message?.slice(0, 100)}`);
+      }
+      setFundingTx(null);
+    } finally {
+      setIsFunding(false);
+    }
+  };
+
   const handleSubmitIntent = async (e) => {
     e.preventDefault();
     if (!intentText.trim()) return;
@@ -160,9 +187,46 @@ export default function UserDashboard() {
 
       <div style={{ display: 'flex', gap: '24px', flexGrow: 1, minHeight: 0 }}>
         
-        {/* Left Column: Deposit */}
+        {/* Left Column: Deposit & Gas Station */}
         <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
+          {/* Swarm Gas Station */}
+          <div className="glass" style={{ padding: '24px', borderRadius: '24px', background: 'linear-gradient(145deg, rgba(255,200,52,0.05) 0%, rgba(255,100,52,0.05) 100%)', border: '1px solid rgba(255,200,52,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ padding: '8px', background: 'rgba(255,200,52,0.1)', borderRadius: '12px', color: '#ffcc00' }}>
+                <Zap size={20} />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', color: '#ffcc00' }}>Swarm Gas Station</h3>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Treasury Balance</span>
+              <span style={{ fontSize: '1.2rem', fontFamily: 'monospace', color: Number(coordinatorBalance) < 1 ? '#ff4444' : '#00ffcc' }}>
+                {Number(coordinatorBalance).toFixed(4)} <span style={{fontSize: '12px', color: 'var(--text-muted)'}}>STT</span>
+              </span>
+            </div>
+
+            <button 
+              type="button" 
+              onClick={handleFundSwarm}
+              disabled={isFunding || !account || !coordinatorAddress}
+              style={{ 
+                width: '100%', padding: '12px', borderRadius: '12px', 
+                background: isFunding ? 'rgba(255,255,255,0.1)' : '#ffcc00', 
+                color: isFunding ? '#fff' : '#000', 
+                border: 'none', fontWeight: 600, cursor: (isFunding || !account) ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {isFunding ? 'Funding Swarm...' : '⚡ Fund Swarm (1.0 STT)'}
+            </button>
+            {fundingTx && (
+              <div style={{ marginTop: '12px', fontSize: '12px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                Status: <span style={{ color: '#00ffcc' }}>{fundingTx.status}</span>
+              </div>
+            )}
+          </div>
+
           {/* Your Portfolio Card */}
           <div className="glass" style={{ padding: '24px', borderRadius: '24px', background: 'linear-gradient(145deg, rgba(52,243,255,0.05) 0%, rgba(189,45,255,0.05) 100%)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h3 style={{ fontSize: '1.2rem', marginBottom: '16px', color: 'var(--text-secondary)' }}>Your Portfolio</h3>

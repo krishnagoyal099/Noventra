@@ -30,6 +30,11 @@ const MESSAGE_BUS_ABI = [
   "event SignalSent(bytes32 indexed signalId, address indexed by, string signalType, bytes data, uint256 timestamp)"
 ];
 
+const AGENT_REGISTRY_ADDRESS = import.meta.env.VITE_AGENT_REGISTRY_ADDRESS ?? "0x332CAd34b8291ACfAD87c8A6A41126cde3F906a6";
+const AGENT_REGISTRY_ABI = [
+  "function getAgentsByRole(uint8) view returns (address[])"
+];
+
 function formatLog(log, messageBus, index) {
   try {
     const args = log.args || messageBus.interface.parseLog(log).args;
@@ -53,12 +58,29 @@ export function useSomnia() {
   const [strategyCount, setStrategyCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [coordinatorAddress, setCoordinatorAddress] = useState(null);
+  const [coordinatorBalance, setCoordinatorBalance] = useState("0");
   const seenIds = useRef(new Set());
 
   useEffect(() => {
     const provider = new SomniaProvider("https://dream-rpc.somnia.network");
     const contract = new Contract(ALO_CORE_ADDRESS, ALO_CORE_ABI, provider);
     const messageBus = new Contract(MESSAGE_BUS_ADDRESS, MESSAGE_BUS_ABI, provider);
+    const registry = new Contract(AGENT_REGISTRY_ADDRESS, AGENT_REGISTRY_ABI, provider);
+
+    const fetchCoordinator = async () => {
+      try {
+        const coords = await registry.getAgentsByRole(5); // 5 = COORDINATOR
+        if (coords && coords.length > 0) {
+          const addr = coords[0];
+          setCoordinatorAddress(addr);
+          const bal = await provider.getBalance(addr);
+          setCoordinatorBalance(formatEther(bal));
+        }
+      } catch (err) {
+        console.error("Failed to fetch coordinator", err);
+      }
+    };
 
     // ─── Fetch on-chain stats (liquidity, strategy count) ───
     const fetchStats = async () => {
@@ -117,16 +139,19 @@ export function useSomnia() {
     messageBus.on("SignalSent", onSignal);
 
     fetchStats();
+    fetchCoordinator();
     loadHistory();
 
-    // Poll stats every 8 seconds (not logs — those come via real-time listener now)
-    const statsInterval = setInterval(fetchStats, 8000);
+    const statsInterval = setInterval(() => {
+      fetchStats();
+      fetchCoordinator();
+    }, 5000);
 
     return () => {
       clearInterval(statsInterval);
-      messageBus.off("SignalSent", onSignal);
+      messageBus.removeAllListeners("SignalSent");
     };
   }, []);
 
-  return { liquidity, receipts, strategyCount, loading, error };
+  return { liquidity, receipts, strategyCount, loading, error, coordinatorAddress, coordinatorBalance };
 }

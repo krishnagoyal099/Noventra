@@ -68,6 +68,8 @@ export class CoordinatorAgent extends BaseAgent {
     this.deadlockTimeoutMs    = deadlockTimeoutMs;
   }
 
+  private fundingInterval: NodeJS.Timeout | null = null;
+
   start(): void {
     this.running = true;
     this.log("Starting DAG Enforcement & Deadlock Monitoring...");
@@ -84,7 +86,13 @@ export class CoordinatorAgent extends BaseAgent {
       this.monitoringIntervalMs
     );
 
-    this.logSuccess("Coordinator online — actively watching the swarm for deadlocks.");
+    // Auto-funder loop every 60s
+    this.fundingInterval = setInterval(
+      () => this.autoFundSwarm(),
+      60000
+    );
+
+    this.logSuccess("Coordinator online — actively watching the swarm for deadlocks and funding agents.");
   }
 
   stop(): void {
@@ -93,7 +101,50 @@ export class CoordinatorAgent extends BaseAgent {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
     }
+    if (this.fundingInterval) {
+      clearInterval(this.fundingInterval);
+      this.fundingInterval = null;
+    }
     this.log("Coordinator offline");
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  SWARM TREASURY: Autonomous Gas Funding
+  // ═══════════════════════════════════════════════════════════════
+
+  private async autoFundSwarm(): Promise<void> {
+    if (!this.running) return;
+
+    try {
+      const coordinatorBalance = await this.wallet.provider!.getBalance(this.wallet.address);
+      
+      for (const config of this.agentConfigs) {
+        if (config.role === AgentRole.COORDINATOR) continue;
+
+        const agentWallet = new Wallet(config.privateKey, this.wallet.provider);
+        const balance = await agentWallet.provider!.getBalance(agentWallet.address);
+
+        // If sub-agent drops below 0.1 STT (100000000000000000 wei)
+        if (balance < 100000000000000000n) {
+          // Send 1.0 STT
+          const transferAmount = 1000000000000000000n; 
+          
+          if (coordinatorBalance > transferAmount) {
+            this.logAction(`Treasury: Auto-funding ${config.name} with 1.0 STT (balance low: ${Number(balance)/1e18})`);
+            const tx = await this.wallet.sendTransaction({
+              to: agentWallet.address,
+              value: transferAmount,
+            });
+            await tx.wait();
+            this.logSuccess(`Funded ${config.name}. Tx: ${tx.hash.slice(0, 10)}...`);
+          } else {
+            this.logWarning(`Treasury critically low! Cannot fund ${config.name}. Need user donations!`);
+          }
+        }
+      }
+    } catch (error: any) {
+      this.logError(`Auto-funding failed: ${error.message}`);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════
