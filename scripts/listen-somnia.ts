@@ -70,14 +70,7 @@ class SomniaProvider extends JsonRpcProvider {
 }
 
 // ─── Deployed Contract Addresses (from: npm run deploy:somnia) ───
-const DEPLOYED = {
-  AgentRegistry:   "0x2FEAb61eA02604B72D6A7A66D7fc2ca926E9f5E7",
-  MessageBus:      "0x599312a994e130f2201D8De2cE2216d2A7848a98",
-  ALOCore:         "0x6513684C358cD6d92Ad43225Ad9B8e3B81f01398",
-  MockDEX:         "0x6AD7a0e21A997708657FeB019CbE10913AE4165a",
-  YieldPoolAlpha:  "0xF9a098ddd8F8176c86e63606875a99668fD56090",
-  YieldPoolBeta:   "0xEcFe3093addA39C64E6B55804cdCDF657de2f6E9",
-};
+import DEPLOYED from "../deployments/somnia.json";
 
 // ─── Somnia Testnet Explorer base URL ───
 const EXPLORER = "https://shannon-explorer.somnia.network";

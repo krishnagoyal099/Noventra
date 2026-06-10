@@ -355,28 +355,52 @@ export class StrategyAgent extends BaseAgent {
         this.log(`🧮 Fallback allocation: ${allocation} units`);
       }
 
-      // ─── Propose Strategy on ALOCore ───
+      // ─── Propose Strategy on MessageBus (Bypass ALOCore bug) ───
       // Truncate rationale to ~200 chars to keep gas costs predictable
       const onChainRationale = rationale.substring(0, 200);
 
-      this.logAction("Submitting strategy proposal to Somnia (ALOCore)...");
-      const tx = await this.core.connect(this.wallet).proposeStrategy(
+      this.logAction("Emitting STRATEGY_PROPOSED to MessageBus...");
+      const encodedStrategy = this.abiCoder.encode(
+        ["address", "uint256", "uint256", "string"],
+        [poolAddress, allocation, apy, onChainRationale]
+      );
+
+      const tx = await this.messageBus.connect(this.wallet).emitSignal(
+        "STRATEGY_PROPOSED",
+        encodedStrategy,
         {
-          targetPool:  poolAddress,
-          allocation:  allocation,
-          expectedAPY: apy,
-          rationale:   onChainRationale, // ← AI's reasoning trace, permanently on-chain
-        },
-        {
-          gasLimit:            9_000_000,
-          maxFeePerGas:        7000000000n,
+          gasLimit: 10_000_000,
+          maxFeePerGas: 7000000000n,
           maxPriorityFeePerGas: 7000000000n,
         }
       );
-      const receipt = await tx.wait();
+      this.logAction(`Transaction sent: ${tx.hash}`);
+      await tx.wait();
+      this.logSuccess("Strategy successfully emitted to MessageBus!");
 
-      this.logSuccess(`Strategy PROPOSED on ALOCore! TxHash: ${receipt.hash.slice(0, 16)}...`);
-      this.log(`📜 On-chain Receipt now contains the AI's reasoning trace.`);
+      // ─── Immediately emit INTENT_READY so ExecutionAgent picks it up ───
+      this.logAction("Emitting INTENT_READY to trigger ExecutionAgent (Solver)...");
+      const intentData = this.abiCoder.encode(
+        ["uint256", "address", "uint256", "uint256"],
+        [
+          BigInt(Date.now()), // unique pseudo-strategyId
+          poolAddress,
+          allocation,
+          apy,
+        ]
+      );
+      const intentTx = await this.messageBus.connect(this.wallet).emitSignal(
+        "INTENT_READY",
+        intentData,
+        {
+          gasLimit: 10_000_000,
+          maxFeePerGas: 7000000000n,
+          maxPriorityFeePerGas: 7000000000n,
+        }
+      );
+      this.logAction(`INTENT_READY tx sent: ${intentTx.hash}`);
+      await intentTx.wait();
+      this.logSuccess("INTENT_READY emitted! ExecutionAgent (Solver) will now bid on this intent.");
 
       // Consume the signal on the MessageBus to mark it as processed
       try {

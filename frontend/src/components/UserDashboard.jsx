@@ -112,7 +112,8 @@ export default function UserDashboard() {
       const signer = await getSigner();
       const tx = await signer.sendTransaction({
         to: coordinatorAddress,
-        value: parseEther("1.0")
+        value: parseEther("1.0"),
+        gasLimit: 21000
       });
       setFundingTx({ hash: tx.hash, status: 'Pending...' });
       await tx.wait();
