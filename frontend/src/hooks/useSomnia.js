@@ -17,7 +17,7 @@ class SomniaProvider extends JsonRpcProvider {
 
 // Contract addresses — override via VITE_ALO_CORE_ADDRESS and VITE_MESSAGE_BUS_ADDRESS in .env.local
 // Defaults point to the official Noventra Somnia Testnet deployment.
-const ALO_CORE_ADDRESS = import.meta.env.VITE_ALO_CORE_ADDRESS ?? "0x6513684C358cD6d92Ad43225Ad9B8e3B81f01398";
+const ALO_CORE_ADDRESS = import.meta.env.VITE_ALO_CORE_ADDRESS ?? "0x2beE183Ce98cEBf13dfcaeba4c2965Cda8cDd13d";
 
 // Minimal ABI for the dashboard
 const ALO_CORE_ABI = [
@@ -25,7 +25,7 @@ const ALO_CORE_ABI = [
   "function getStrategyCount() view returns (uint256)",
 ];
 
-const MESSAGE_BUS_ADDRESS = import.meta.env.VITE_MESSAGE_BUS_ADDRESS ?? "0x599312a994e130f2201D8De2cE2216d2A7848a98";
+const MESSAGE_BUS_ADDRESS = import.meta.env.VITE_MESSAGE_BUS_ADDRESS ?? "0x1e326DeC20fa7006C827e2DA6fa8dc56e7276d21";
 const MESSAGE_BUS_ABI = [
   "event SignalSent(bytes32 indexed signalId, address indexed by, string signalType, bytes data, uint256 timestamp)"
 ];

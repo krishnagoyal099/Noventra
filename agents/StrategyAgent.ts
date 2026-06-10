@@ -214,8 +214,8 @@ export class StrategyAgent extends BaseAgent {
         // Pool A (Alpha) = safer ~500 bps APY; Pool B (Beta) = higher ~800 bps APY
         const usePoolA = decision.pool_preference !== "high_yield";
         poolAddress = usePoolA
-          ? "0xF9a098ddd8F8176c86e63606875a99668fD56090" // YieldPoolAlpha (deployed)
-          : "0xEcFe3093addA39C64E6B55804cdCDF657de2f6E9"; // YieldPoolBeta (deployed)
+          ? "0xf22AC8A79C638aD8B92861dF9f32b241599E9C02" // YieldPoolAlpha (deployed)
+          : "0x369797e23813775069Ef41ad3a3519C1ccBaC003"; // YieldPoolBeta (deployed)
 
         apy = BigInt(decision.expected_apy_bps);
         allocation = (totalLiquidity * BigInt(Math.floor(decision.allocation_percentage * 100))) / 10000n;
@@ -225,7 +225,7 @@ export class StrategyAgent extends BaseAgent {
       } else {
         // Fallback: default to pool A with conservative 10% allocation
         this.logWarning("No Groq key — using fallback for USER_INTENT");
-        poolAddress = "0xF9a098ddd8F8176c86e63606875a99668fD56090"; // YieldPoolAlpha
+        poolAddress = "0xf22AC8A79C638aD8B92861dF9f32b241599E9C02"; // YieldPoolAlpha
         apy = 500n;
         allocation = totalLiquidity / 10n;
         rationale = `[USER INTENT] Fallback allocation for: "${intentText}"`;
