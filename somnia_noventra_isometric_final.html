@@ -1,0 +1,244 @@
+
+<style>
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes hexglow{0%,100%{opacity:.45}50%{opacity:.92}}
+@keyframes flowdash{to{stroke-dashoffset:-16}}
+@keyframes floatup{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.pd{animation:pulse 2.4s ease-in-out infinite}
+.hg{animation:hexglow 2s ease-in-out infinite}
+.fd{animation:flowdash 1.2s linear infinite;stroke-dasharray:4 5}
+.plat1{animation:floatup 5s ease-in-out infinite}
+.plat2{animation:floatup 5s ease-in-out infinite;animation-delay:.8s}
+.plat3{animation:floatup 5s ease-in-out infinite;animation-delay:1.6s}
+</style>
+<div style="background:radial-gradient(ellipse 75% 55% at 50% 38%,#1c0833 0%,#09050f 55%,#020108 100%);border-radius:18px;padding:30px 14px 26px;overflow:hidden;position:relative">
+
+<!-- Noventra watermark background -->
+<svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:.04;pointer-events:none;width:70%;height:70%" viewBox="0 0 1111 913" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(-2672 -682)">
+    <path d="M2897 982.75 3056.75 823 3537 823 3537 1302.25 3377.25 1462 2897 1462ZM2897 982.75 3377.25 982.75 3537 823M3377.25 982.75 3377.25 1462" stroke="#FFFFFF" stroke-width="27.5" stroke-miterlimit="8" fill="none"/>
+    <path d="M2837 989.5C2837 949.459 2869.01 917 2908.5 917 2947.99 917 2980 949.459 2980 989.5 2980 1029.54 2947.99 1062 2908.5 1062 2869.01 1062 2837 1029.54 2837 989.5Z" fill="#FFFFFF"/>
+    <path d="M2837 1462C2837 1422.24 2869.01 1390 2908.5 1390 2947.99 1390 2980 1422.24 2980 1462 2980 1501.76 2947.99 1534 2908.5 1534 2869.01 1534 2837 1501.76 2837 1462Z" fill="#FFFFFF"/>
+    <path d="M3307 1462C3307 1422.24 3338.79 1390 3378 1390 3417.21 1390 3449 1422.24 3449 1462 3449 1501.76 3417.21 1534 3378 1534 3338.79 1534 3307 1501.76 3307 1462Z" fill="#FFFFFF"/>
+    <path d="M3307 989.5C3307 949.459 3338.79 917 3378 917 3417.21 917 3449 949.459 3449 989.5 3449 1029.54 3417.21 1062 3378 1062 3307 1029.54 3307 989.5Z" fill="#FFFFFF"/>
+    <path d="M2980 798C2980 758.235 3011.79 726 3051 726 3090.21 726 3122 758.235 3122 798 3122 837.765 3090.21 870 3051 870 3011.79 870 2980 837.765 2980 798Z" fill="#FFFFFF"/>
+    <path d="M3450 798C3450 758.235 3481.79 726 3521 726 3560.21 726 3592 758.235 3592 798 3592 837.765 3560.21 870 3521 870 3481.79 870 3450 837.765 3450 798Z" fill="#FFFFFF"/>
+    <path d="M3493 1288C3493 1248.24 3525.01 1216 3564.5 1216 3603.99 1216 3636 1248.24 3636 1288 3636 1327.76 3603.99 1360 3564.5 1360 3525.01 1360 3493 1327.76 3493 1288Z" fill="#FFFFFF"/>
+    <path d="M2833.49 1581C2792.76 1581 2759.75 1547.98 2759.75 1507.25L2759.75 1212.25C2759.75 1171.52 2726.73 1138.5 2686 1138.5 2726.73 1138.5 2759.75 1105.48 2759.75 1064.75L2759.75 769.747C2759.75 729.018 2792.76 696 2833.49 696M3621.51 696C3662.24 696 3695.25 729.018 3695.25 769.747L3695.25 1064.75C3695.25 1105.48 3728.27 1138.5 3769 1138.5 3728.27 1138.5 3695.25 1171.52 3695.25 1212.25L3695.25 1507.25C3695.25 1547.98 3662.24 1581 3621.51 1581" stroke="#FFFFFF" stroke-width="27.5" stroke-miterlimit="8" fill="none"/>
+  </g>
+</svg>
+
+<svg width="100%" viewBox="0 0 680 840" role="img" style="display:block;position:relative">
+<title>Noventra × Somnia isometric architecture diagram</title>
+<desc>Three floating glassmorphic isometric platforms showing Somnia AI agent architecture built for Noventra.</desc>
+<defs>
+  <linearGradient id="pt1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d4c0ff" stop-opacity=".14"/><stop offset="100%" stop-color="#6040b0" stop-opacity=".04"/></linearGradient>
+  <linearGradient id="pt2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b8a8f0" stop-opacity=".11"/><stop offset="100%" stop-color="#4830a0" stop-opacity=".03"/></linearGradient>
+  <linearGradient id="pt3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9055e8" stop-opacity=".25"/><stop offset="100%" stop-color="#3a1060" stop-opacity=".09"/></linearGradient>
+  <linearGradient id="sl" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#8060c8" stop-opacity=".2"/><stop offset="100%" stop-color="#1a0635" stop-opacity=".42"/></linearGradient>
+  <linearGradient id="sr" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#9870d8" stop-opacity=".24"/><stop offset="100%" stop-color="#28085a" stop-opacity=".48"/></linearGradient>
+  <linearGradient id="sl3" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#5825a8" stop-opacity=".32"/><stop offset="100%" stop-color="#150330" stop-opacity=".55"/></linearGradient>
+  <linearGradient id="sr3" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#7535c0" stop-opacity=".36"/><stop offset="100%" stop-color="#1e0448" stop-opacity=".6"/></linearGradient>
+  <linearGradient id="ct" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff" stop-opacity=".24"/><stop offset="100%" stop-color="#8060c0" stop-opacity=".06"/></linearGradient>
+  <linearGradient id="cl" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#ffffff" stop-opacity=".07"/><stop offset="100%" stop-color="#000" stop-opacity=".32"/></linearGradient>
+  <linearGradient id="cr" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff" stop-opacity=".12"/><stop offset="100%" stop-color="#000" stop-opacity=".22"/></linearGradient>
+  <linearGradient id="hexg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#cc80ff" stop-opacity=".75"/><stop offset="100%" stop-color="#6610cc" stop-opacity=".15"/></linearGradient>
+  <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#aa55ff" stop-opacity=".55"/><stop offset="100%" stop-color="#6610cc" stop-opacity="0"/></linearGradient>
+  <radialGradient id="fglow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#8020ee" stop-opacity=".4"/><stop offset="100%" stop-color="#8020ee" stop-opacity="0"/></radialGradient>
+</defs>
+
+<!-- ══════ PLATFORM 1 — USER INTERFACE ══════ -->
+<g class="plat1">
+  <polygon points="116,148 116,180 340,250 340,218" fill="url(#sl)" stroke="rgba(140,100,220,0.28)" stroke-width="0.6"/>
+  <polygon points="564,148 564,180 340,250 340,218" fill="url(#sr)" stroke="rgba(160,120,240,0.32)" stroke-width="0.6"/>
+  <polygon points="340,78 564,148 340,218 116,148" fill="url(#pt1)" stroke="rgba(210,188,255,0.52)" stroke-width="1.2"/>
+  <line x1="340" y1="78" x2="564" y2="148" stroke="rgba(255,250,255,0.52)" stroke-width="1.5"/>
+  <line x1="228" y1="130" x2="452" y2="200" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+
+  <!-- User Intent cube -->
+  <polygon points="340,92 386,110 340,128 294,110" fill="url(#ct)" stroke="rgba(210,185,255,0.68)" stroke-width="1"/>
+  <polygon points="294,110 294,140 340,158 340,128" fill="url(#cl)" stroke="rgba(140,100,220,0.3)" stroke-width="0.6"/>
+  <polygon points="386,110 386,140 340,158 340,128" fill="url(#cr)" stroke="rgba(165,125,240,0.35)" stroke-width="0.6"/>
+  <line x1="340" y1="92" x2="386" y2="110" stroke="rgba(240,228,255,0.7)" stroke-width="1"/>
+  <!-- chat icon -->
+  <rect x="329" y="103" width="22" height="14" rx="3" fill="none" stroke="rgba(210,188,255,0.72)" stroke-width="0.9"/>
+  <circle cx="336" cy="110" r="1.4" fill="rgba(210,188,255,0.85)"/>
+  <circle cx="340" cy="110" r="1.4" fill="rgba(210,188,255,0.85)"/>
+  <circle cx="344" cy="110" r="1.4" fill="rgba(210,188,255,0.85)"/>
+
+  <text style="font-size:11px;fill:rgba(220,205,255,0.92);font-family:sans-serif;font-weight:500" x="340" y="173" text-anchor="middle">User Intent</text>
+  <text style="font-size:9px;fill:rgba(150,120,220,0.7);font-family:sans-serif" x="340" y="186" text-anchor="middle">Natural Language</text>
+
+  <text style="font-size:8.5px;fill:rgba(175,150,245,0.6);font-family:sans-serif;letter-spacing:.09em" x="107" y="142" text-anchor="end">USER INTERFACE</text>
+  <text style="font-size:8px;fill:rgba(115,85,185,0.48);font-family:sans-serif" x="107" y="154" text-anchor="end">Intent Layer</text>
+</g>
+
+<!-- connector 1→2 -->
+<line x1="340" y1="250" x2="340" y2="292" stroke="rgba(175,140,255,0.7)" stroke-width="1.3" class="fd"/>
+<circle cx="340" cy="250" r="3.5" fill="rgba(255,255,255,0.92)" class="pd"/>
+<circle cx="340" cy="292" r="3.5" fill="rgba(170,130,255,0.95)" class="pd" style="animation-delay:.5s"/>
+
+<!-- ══════ PLATFORM 2 — HIVE MIND ══════ -->
+<g class="plat2">
+  <polygon points="116,360 116,394 340,464 340,430" fill="url(#sl)" stroke="rgba(130,90,210,0.25)" stroke-width="0.6"/>
+  <polygon points="564,360 564,394 340,464 340,430" fill="url(#sr)" stroke="rgba(150,110,230,0.28)" stroke-width="0.6"/>
+  <polygon points="340,292 564,360 340,430 116,360" fill="url(#pt2)" stroke="rgba(195,172,255,0.46)" stroke-width="1.2"/>
+  <line x1="340" y1="292" x2="564" y2="360" stroke="rgba(255,250,255,0.46)" stroke-width="1.4"/>
+  <line x1="228" y1="344" x2="452" y2="414" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
+
+  <!-- COORDINATOR (center) -->
+  <polygon points="340,306 378,322 340,338 302,322" fill="url(#ct)" stroke="rgba(205,180,255,0.72)" stroke-width="1.1"/>
+  <polygon points="302,322 302,350 340,366 340,338" fill="url(#cl)" stroke="rgba(140,100,220,0.28)" stroke-width="0.6"/>
+  <polygon points="378,322 378,350 340,366 340,338" fill="url(#cr)" stroke="rgba(165,125,240,0.33)" stroke-width="0.6"/>
+  <line x1="340" y1="306" x2="378" y2="322" stroke="rgba(240,228,255,0.65)" stroke-width="0.9"/>
+  <polygon points="340,314 347,318 347,326 340,330 333,326 333,318" fill="none" stroke="rgba(205,185,255,0.78)" stroke-width="1"/>
+  <text style="font-size:8.5px;fill:rgba(200,180,255,0.85);font-family:sans-serif;font-weight:500" x="340" y="380" text-anchor="middle">Coordinator Agent</text>
+
+  <!-- SCOUT (left-top) purple -->
+  <polygon points="215,322 253,338 215,354 177,338" fill="url(#ct)" stroke="rgba(195,130,255,0.72)" stroke-width="1"/>
+  <polygon points="177,338 177,366 215,382 215,354" fill="url(#cl)" stroke="rgba(120,58,200,0.27)" stroke-width="0.6"/>
+  <polygon points="253,338 253,366 215,382 215,354" fill="url(#cr)" stroke="rgba(150,88,232,0.32)" stroke-width="0.6"/>
+  <line x1="215" y1="322" x2="253" y2="338" stroke="rgba(220,175,255,0.65)" stroke-width="0.9"/>
+  <circle cx="213" cy="337" r="5.5" fill="none" stroke="rgba(190,120,255,0.75)" stroke-width="1"/>
+  <line x1="217" y1="341" x2="221" y2="345" stroke="rgba(190,120,255,0.75)" stroke-width="1.1"/>
+  <text style="font-size:8.5px;fill:rgba(190,120,255,0.88);font-family:sans-serif;font-weight:500" x="215" y="396" text-anchor="middle">Scout Agent</text>
+
+  <!-- STRATEGY (right-top) cyan -->
+  <polygon points="465,322 503,338 465,354 427,338" fill="url(#ct)" stroke="rgba(55,215,252,0.68)" stroke-width="1"/>
+  <polygon points="427,338 427,366 465,382 465,354" fill="url(#cl)" stroke="rgba(18,138,184,0.25)" stroke-width="0.6"/>
+  <polygon points="503,338 503,366 465,382 465,354" fill="url(#cr)" stroke="rgba(38,168,215,0.3)" stroke-width="0.6"/>
+  <line x1="465" y1="322" x2="503" y2="338" stroke="rgba(135,232,255,0.6)" stroke-width="0.9"/>
+  <ellipse cx="465" cy="336" rx="6" ry="5" fill="none" stroke="rgba(55,215,252,0.78)" stroke-width="1"/>
+  <line x1="465" y1="331" x2="465" y2="341" stroke="rgba(55,215,252,0.5)" stroke-width="0.8"/>
+  <text style="font-size:8.5px;fill:rgba(55,215,252,0.88);font-family:sans-serif;font-weight:500" x="465" y="396" text-anchor="middle">Strategy Agent</text>
+
+  <!-- RISK (left-bottom) green -->
+  <polygon points="215,384 253,400 215,416 177,400" fill="url(#ct)" stroke="rgba(65,228,138,0.68)" stroke-width="1"/>
+  <polygon points="177,400 177,428 215,444 215,416" fill="url(#cl)" stroke="rgba(28,148,78,0.25)" stroke-width="0.6"/>
+  <polygon points="253,400 253,428 215,444 215,416" fill="url(#cr)" stroke="rgba(48,178,98,0.3)" stroke-width="0.6"/>
+  <line x1="215" y1="384" x2="253" y2="400" stroke="rgba(138,255,182,0.55)" stroke-width="0.9"/>
+  <polygon points="215,392 222,395 222,404 215,408 208,404 208,395" fill="none" stroke="rgba(65,228,138,0.78)" stroke-width="1"/>
+  <polyline points="211,401 214,405 219,398" fill="none" stroke="rgba(65,228,138,0.82)" stroke-width="1.1"/>
+  <text style="font-size:8.5px;fill:rgba(65,228,138,0.88);font-family:sans-serif;font-weight:500" x="215" y="458" text-anchor="middle">Risk Agent</text>
+
+  <!-- EXECUTION (right-bottom) orange -->
+  <polygon points="465,384 503,400 465,416 427,400" fill="url(#ct)" stroke="rgba(255,162,42,0.68)" stroke-width="1"/>
+  <polygon points="427,400 427,428 465,444 465,416" fill="url(#cl)" stroke="rgba(172,88,12,0.25)" stroke-width="0.6"/>
+  <polygon points="503,400 503,428 465,444 465,416" fill="url(#cr)" stroke="rgba(208,118,22,0.3)" stroke-width="0.6"/>
+  <line x1="465" y1="384" x2="503" y2="400" stroke="rgba(255,202,95,0.55)" stroke-width="0.9"/>
+  <polyline points="467,392 462,401 467,401 462,410" fill="none" stroke="rgba(255,162,42,0.88)" stroke-width="1.2"/>
+  <text style="font-size:8.5px;fill:rgba(255,162,42,0.88);font-family:sans-serif;font-weight:500" x="465" y="458" text-anchor="middle">Execution Agent</text>
+
+  <!-- wires coordinator→agents -->
+  <line x1="302" y1="324" x2="255" y2="340" stroke="rgba(190,120,255,0.48)" stroke-width="0.9"/>
+  <line x1="378" y1="324" x2="425" y2="340" stroke="rgba(55,215,252,0.48)" stroke-width="0.9"/>
+  <line x1="302" y1="340" x2="255" y2="400" stroke="rgba(65,228,138,0.48)" stroke-width="0.9"/>
+  <line x1="378" y1="340" x2="425" y2="400" stroke="rgba(255,162,42,0.48)" stroke-width="0.9"/>
+  <circle cx="278" cy="332" r="2.2" fill="rgba(190,120,255,0.82)" class="pd"/>
+  <circle cx="402" cy="332" r="2.2" fill="rgba(55,215,252,0.82)" class="pd" style="animation-delay:.25s"/>
+  <circle cx="278" cy="370" r="2.2" fill="rgba(65,228,138,0.82)" class="pd" style="animation-delay:.5s"/>
+  <circle cx="402" cy="370" r="2.2" fill="rgba(255,162,42,0.82)" class="pd" style="animation-delay:.75s"/>
+
+  <text style="font-size:8.5px;fill:rgba(162,142,238,0.62);font-family:sans-serif;letter-spacing:.09em" x="107" y="354" text-anchor="end">THE HIVE MIND</text>
+  <text style="font-size:8px;fill:rgba(108,78,182,0.48);font-family:sans-serif" x="107" y="366" text-anchor="end">Agent Swarm</text>
+  <polygon points="98,360 106,356 106,364" fill="rgba(148,108,218,0.55)"/>
+</g>
+
+<!-- connector 2→3 -->
+<line x1="340" y1="464" x2="340" y2="510" stroke="rgba(152,72,255,0.78)" stroke-width="1.4" class="fd"/>
+<circle cx="340" cy="464" r="3.5" fill="rgba(168,128,255,0.92)" class="pd" style="animation-delay:.3s"/>
+<circle cx="340" cy="510" r="3.5" fill="rgba(142,52,255,0.96)" class="pd" style="animation-delay:.7s"/>
+<path d="M215,444 Q215,495 298,514" fill="none" stroke="rgba(65,228,138,0.36)" stroke-width="1" class="fd"/>
+<path d="M465,444 Q465,495 382,514" fill="none" stroke="rgba(255,162,42,0.4)" stroke-width="1.1" class="fd"/>
+<circle cx="382" cy="514" r="2.5" fill="rgba(255,162,42,0.82)" class="pd" style="animation-delay:.45s"/>
+
+<!-- ══════ PLATFORM 3 — SOMNIA BLOCKCHAIN ══════ -->
+<g class="plat3">
+  <ellipse cx="340" cy="710" rx="228" ry="52" fill="url(#fglow)"/>
+  <polygon points="116,580 116,622 340,692 340,650" fill="url(#sl3)" stroke="rgba(118,38,198,0.28)" stroke-width="0.6"/>
+  <polygon points="564,580 564,622 340,692 340,650" fill="url(#sr3)" stroke="rgba(142,52,218,0.32)" stroke-width="0.6"/>
+  <polygon points="340,510 564,580 340,650 116,580" fill="url(#pt3)" stroke="rgba(172,92,255,0.56)" stroke-width="1.3"/>
+  <line x1="340" y1="510" x2="564" y2="580" stroke="rgba(218,168,255,0.58)" stroke-width="1.6"/>
+  <line x1="116" y1="622" x2="340" y2="692" stroke="rgba(138,58,208,0.22)" stroke-width="0.6"/>
+  <line x1="564" y1="622" x2="340" y2="692" stroke="rgba(138,58,208,0.2)" stroke-width="0.6"/>
+
+  <!-- grid dots -->
+  <circle cx="238" cy="558" r="1.5" fill="rgba(152,72,238,0.44)"/>
+  <circle cx="288" cy="538" r="1.5" fill="rgba(152,72,238,0.38)"/>
+  <circle cx="392" cy="538" r="1.5" fill="rgba(152,72,238,0.38)"/>
+  <circle cx="442" cy="558" r="1.5" fill="rgba(152,72,238,0.44)"/>
+  <circle cx="198" cy="576" r="1.2" fill="rgba(128,52,208,0.34)"/>
+  <circle cx="482" cy="576" r="1.2" fill="rgba(128,52,208,0.34)"/>
+  <circle cx="268" cy="590" r="1.1" fill="rgba(118,42,198,0.28)"/>
+  <circle cx="412" cy="590" r="1.1" fill="rgba(118,42,198,0.28)"/>
+
+  <!-- beam -->
+  <polygon points="328,570 352,570 368,655 312,655" fill="url(#beam)" opacity=".38"/>
+
+  <!-- hex glow -->
+  <polygon points="340,526 364,539 364,565 340,578 316,565 316,539" fill="rgba(88,18,158,0.58)" stroke="rgba(192,118,255,0.78)" stroke-width="1.4" class="hg"/>
+  <polygon points="340,534 360,545 360,561 340,572 320,561 320,545" fill="rgba(118,38,198,0.35)" stroke="rgba(212,152,255,0.55)" stroke-width="0.8"/>
+  <circle cx="340" cy="553" r="8" fill="rgba(182,98,255,0.42)" class="hg"/>
+  <circle cx="340" cy="553" r="3.8" fill="rgba(232,195,255,0.92)" class="pd"/>
+
+  <!-- Somnia {s} logo -->
+  <text style="font-size:28px;fill:rgba(255,255,255,0.18);font-family:sans-serif;font-weight:700;letter-spacing:-.02em" x="340" y="630" text-anchor="middle">{s}</text>
+  <text style="font-size:11px;fill:rgba(208,168,255,0.78);font-family:sans-serif;font-weight:600;letter-spacing:.16em" x="340" y="648" text-anchor="middle">SOMNIA</text>
+
+  <text style="font-size:8.5px;fill:rgba(152,92,228,0.62);font-family:sans-serif;letter-spacing:.09em" x="107" y="574" text-anchor="end">SOMNIA NETWORK</text>
+  <text style="font-size:8px;fill:rgba(102,52,172,0.48);font-family:sans-serif" x="107" y="586" text-anchor="end">Blockchain Layer</text>
+  <polygon points="98,580 106,576 106,584" fill="rgba(138,78,208,0.55)"/>
+</g>
+
+<!-- ══════ RECEIPT BOX ══════ -->
+<rect x="52" y="668" width="192" height="66" rx="12" fill="rgba(46,12,88,0.58)" stroke="rgba(172,92,255,0.46)" stroke-width="1"/>
+<line x1="66" y1="668" x2="232" y2="668" stroke="rgba(208,162,255,0.28)" stroke-width="0.6"/>
+<rect x="68" y="682" width="17" height="24" rx="2" fill="none" stroke="rgba(182,122,255,0.55)" stroke-width="0.9"/>
+<line x1="71" y1="689" x2="82" y2="689" stroke="rgba(182,122,255,0.5)" stroke-width="0.7"/>
+<line x1="71" y1="694" x2="82" y2="694" stroke="rgba(182,122,255,0.5)" stroke-width="0.7"/>
+<line x1="71" y1="699" x2="78" y2="699" stroke="rgba(182,122,255,0.5)" stroke-width="0.7"/>
+<circle cx="83" cy="701" r="4.5" fill="none" stroke="rgba(62,222,136,0.72)" stroke-width="0.9"/>
+<polyline points="80,701 82,703.5 86.5,698" fill="none" stroke="rgba(62,222,136,0.78)" stroke-width="1"/>
+<text style="font-size:10.5px;fill:rgba(218,188,255,0.88);font-family:sans-serif;font-weight:500" x="175" y="688" text-anchor="middle">On-Chain Receipt</text>
+<text style="font-size:9px;fill:rgba(142,88,212,0.66);font-family:sans-serif" x="175" y="706" text-anchor="middle">Verifiable &amp; Immutable</text>
+<path d="M228,650 Q220,659 218,668" fill="none" stroke="rgba(152,72,238,0.45)" stroke-width="0.9" stroke-dasharray="3 3"/>
+
+<!-- Noventra logo badge top-right -->
+<g opacity=".82">
+  <rect x="490" y="28" width="172" height="44" rx="10" fill="rgba(18,6,36,0.75)" stroke="rgba(155,125,245,0.35)" stroke-width="0.7"/>
+  <svg x="498" y="34" width="32" height="32" viewBox="0 0 1111 913">
+    <g transform="translate(-2672 -682)">
+      <path d="M2897 982.75 3056.75 823 3537 823 3537 1302.25 3377.25 1462 2897 1462ZM2897 982.75 3377.25 982.75 3537 823M3377.25 982.75 3377.25 1462" stroke="#c8b0ff" stroke-width="40" stroke-miterlimit="8" fill="none"/>
+      <circle cx="2908.5" cy="989.5" r="72.5" fill="#c8b0ff"/>
+      <circle cx="2908.5" cy="1462" r="72.5" fill="#c8b0ff"/>
+      <circle cx="3378" cy="1462" r="72.5" fill="#c8b0ff"/>
+      <circle cx="3378" cy="989.5" r="72.5" fill="#c8b0ff"/>
+      <circle cx="3051" cy="798" r="72.5" fill="#c8b0ff"/>
+      <circle cx="3521" cy="798" r="72.5" fill="#c8b0ff"/>
+      <circle cx="3564.5" cy="1288" r="72.5" fill="#c8b0ff"/>
+      <path d="M2833.49 1581C2792.76 1581 2759.75 1547.98 2759.75 1507.25L2759.75 1212.25C2759.75 1171.52 2726.73 1138.5 2686 1138.5 2726.73 1138.5 2759.75 1105.48 2759.75 1064.75L2759.75 769.747C2759.75 729.018 2792.76 696 2833.49 696M3621.51 696C3662.24 696 3695.25 729.018 3695.25 769.747L3695.25 1064.75C3695.25 1105.48 3728.27 1138.5 3769 1138.5 3728.27 1138.5 3695.25 1171.52 3695.25 1212.25L3695.25 1507.25C3695.25 1547.98 3662.24 1581 3621.51 1581" stroke="#c8b0ff" stroke-width="40" stroke-miterlimit="8" fill="none"/>
+    </g>
+  </svg>
+  <text style="font-size:11px;fill:rgba(210,188,255,0.88);font-family:sans-serif;font-weight:600;letter-spacing:.1em" x="540" y="47" dominant-baseline="middle">NOVENTRA</text>
+  <text style="font-size:8px;fill:rgba(148,118,228,0.6);font-family:sans-serif;letter-spacing:.05em" x="540" y="62" dominant-baseline="middle">× Somnia Network</text>
+</g>
+
+<!-- ══════ LEGEND ══════ -->
+<rect x="404" y="660" width="258" height="168" rx="12" fill="rgba(12,5,28,0.78)" stroke="rgba(98,52,172,0.34)" stroke-width="0.7"/>
+<line x1="418" y1="660" x2="650" y2="660" stroke="rgba(188,148,255,0.18)" stroke-width="0.5"/>
+<text style="font-size:8px;fill:rgba(162,128,238,0.52);font-family:sans-serif;letter-spacing:.1em" x="533" y="676" text-anchor="middle">FLOW</text>
+<circle cx="426" cy="694" r="4" fill="rgba(255,255,255,0.9)" class="pd"/>
+<text style="font-size:9.5px;fill:rgba(182,162,244,0.78);font-family:sans-serif" x="438" y="698">Intent Submitted</text>
+<circle cx="426" cy="714" r="4" fill="rgba(168,142,255,0.92)" class="pd" style="animation-delay:.2s"/>
+<text style="font-size:9.5px;fill:rgba(182,162,244,0.78);font-family:sans-serif" x="438" y="718">Agents Orchestrate</text>
+<circle cx="426" cy="734" r="4" fill="rgba(55,215,252,0.92)" class="pd" style="animation-delay:.4s"/>
+<text style="font-size:9.5px;fill:rgba(182,162,244,0.78);font-family:sans-serif" x="438" y="738">Strategy Validated</text>
+<circle cx="426" cy="754" r="4" fill="rgba(65,228,138,0.92)" class="pd" style="animation-delay:.6s"/>
+<text style="font-size:9.5px;fill:rgba(182,162,244,0.78);font-family:sans-serif" x="438" y="758">Risk Checked</text>
+<circle cx="426" cy="774" r="4" fill="rgba(255,162,42,0.92)" class="pd" style="animation-delay:.8s"/>
+<text style="font-size:9.5px;fill:rgba(182,162,244,0.78);font-family:sans-serif" x="438" y="778">Transaction Executed</text>
+<circle cx="426" cy="794" r="4" fill="rgba(182,88,255,0.92)" class="pd" style="animation-delay:1s"/>
+<text style="font-size:9.5px;fill:rgba(182,162,244,0.78);font-family:sans-serif" x="438" y="798">On-Chain Receipt Returned</text>
+
+</svg>
+</div>

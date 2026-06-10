@@ -33,6 +33,7 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "groq-sdk": "^1.2.1"
   }
 }

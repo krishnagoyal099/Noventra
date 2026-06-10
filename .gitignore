@@ -1,15 +1,81 @@
-node_modules
-.env
-cache
-artifacts
-typechain-types
-coverage
-coverage.json
-dist
+# ═══════════════════════════════════════════════════════════════
+#  Noventra — Root .gitignore
+# ═══════════════════════════════════════════════════════════════
 
-# --- Added for extra security ---
+# ─── Secrets & Keys (CRITICAL — never commit) ───
+.env
 .env.*
+!.env.example
 *.secret
 *.key
+*.pem
+*.p12
+*.pfx
+keys.js           # ⚠️ private key file — NEVER commit
+
+# ─── Node / Package managers ───
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.yarn/
+.cache/
+
+# ─── Hardhat / Solidity build artifacts ───
+cache/
+artifacts/
+typechain-types/
+coverage/
+coverage.json
 ignition/deployments/
-# --------------------------------
+# deployments/ is tracked — contains the official Somnia testnet addresses (deployments/somnia.json)
+# But any user-generated re-deploys are gitignored:
+deployments/*.local.json
+
+# ─── Frontend build output ───
+frontend/dist/
+frontend/dist-ssr/
+
+# ─── TypeScript compiled output ───
+dist/
+build/
+out/
+*.js.map
+*.d.ts.map
+
+# ─── Logs ───
+logs/
+*.log
+
+# ─── OS files ───
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── IDE / Editor ───
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+
+# ─── Binary / installer files (should never be in a code repo) ───
+*.msi
+*.exe
+*.dmg
+*.pkg
+*.deb
+*.rpm
+*.zip
+*.tar.gz
+*.rar
+
+# ─── Docker ───
+.docker/

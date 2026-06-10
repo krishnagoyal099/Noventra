@@ -7,6 +7,10 @@ pragma solidity ^0.8.20;
  * ═══════════════════════════════════════════════════════════════════
  *  Simulated DEX for demo purposes. In production, this would be
  *  replaced by actual DEX integrations (Uniswap, Curve, etc.)
+ *
+ *  JIT Upgrade: Also simulates a mempool by emitting LargeSwapPending
+ *  events via signalLargeSwapIntent(). The ScoutAgent listens to these
+ *  to detect JIT liquidity opportunities before execution.
  * ═══════════════════════════════════════════════════════════════════
  */
 contract MockDEX {
@@ -89,5 +93,48 @@ contract MockDEX {
     ) external view returns (uint256) {
         uint256 fee = (_amountIn * swapFeeBps) / 10000;
         return _amountIn - fee;
+    }
+
+    // ─── JIT Liquidity Simulation (Mempool Emulation) ───────────────
+
+    /**
+     * @dev Emitted when a large swap enters the simulated mempool.
+     *      In production, the ScoutAgent would monitor the actual Somnia
+     *      mempool. Here, this event is the on-chain substitute.
+     *
+     * @param estimatedFeeCapture  Fee units claimable by a JIT liquidity provider.
+     */
+    event LargeSwapPending(
+        address indexed trader,
+        address indexed tokenIn,
+        address indexed tokenOut,
+        uint256 amountIn,
+        uint256 estimatedFeeCapture,
+        uint256 timestamp
+    );
+
+    /**
+     * @notice Simulates a whale submitting a large swap into the mempool.
+     * @dev Anyone can call this; in production this would be replaced by
+     *      direct mempool monitoring (e.g. eth_subscribe pendingTransactions).
+     * @param _tokenIn  Address of token being sold
+     * @param _tokenOut Address of token being bought
+     * @param _amountIn Size of the whale's swap in raw units
+     */
+    function signalLargeSwapIntent(
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amountIn
+    ) external {
+        require(_amountIn > 0, "MockDEX: zero swap amount");
+        uint256 estimatedFee = (_amountIn * swapFeeBps) / 10000;
+        emit LargeSwapPending(
+            msg.sender,
+            _tokenIn,
+            _tokenOut,
+            _amountIn,
+            estimatedFee,
+            block.timestamp
+        );
     }
 }

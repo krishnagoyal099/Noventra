@@ -1,0 +1,30 @@
+# Noventra — Docker Compose (Compose Spec — no version key needed)
+services:
+  agent-swarm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: noventra-swarm
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "listen-somnia"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          memory: 128M

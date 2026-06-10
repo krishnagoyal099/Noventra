@@ -8,16 +8,16 @@
  *
  *  Run with:
  *    npx hardhat run scripts/fund-agents.ts --network somnia
+ *    or
+ *    npx ts-node scripts/fund-agents.ts [amount]
  * ═══════════════════════════════════════════════════════════════════
  */
 
 import { JsonRpcProvider, Wallet, parseEther, formatEther } from "ethers";
 import * as dotenv from "dotenv";
+import * as readline from "readline";
 
 dotenv.config();
-
-/** Target balance for each agent wallet */
-const TARGET_BALANCE = parseEther("0.07");
 
 function requireEnv(key: string): string {
   const val = process.env[key];
@@ -25,7 +25,30 @@ function requireEnv(key: string): string {
   return val;
 }
 
+function askQuestion(query: string): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise(resolve => rl.question(query, ans => {
+    rl.close();
+    resolve(ans);
+  }));
+}
+
 async function main(): Promise<void> {
+  let targetAmountStr = process.argv[2];
+  
+  if (!targetAmountStr) {
+    targetAmountStr = await askQuestion("How much STT should each agent be funded to? (e.g., 2.0): ");
+  }
+
+  if (!targetAmountStr || isNaN(Number(targetAmountStr))) {
+    throw new Error("Invalid amount provided.");
+  }
+
+  const TARGET_BALANCE = parseEther(targetAmountStr);
+
   const rpcUrl      = process.env.SOMNIA_RPC_URL || "https://dream-rpc.somnia.network";
   const provider    = new JsonRpcProvider(rpcUrl);
   const deployerKey = requireEnv("PRIVATE_KEY");

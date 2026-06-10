@@ -278,166 +278,63 @@ async function main(): Promise<void> {
   risk.start();
   strategy.start();
   execution.start();
+  coordinator.start();
 
   divider();
 
-  // ─── Trigger the autonomous pipeline ───
-  banner("PHASE 4: Simulating Market Event (APY Spike)");
+  banner("🚀 Agents are now LIVE and listening indefinitely...");
+  console.log(`${COLORS.cyan}Ready to receive intents from the frontend dashboard!${COLORS.reset}`);
 
-  console.log(`${COLORS.yellow}⏳ Waiting 8 seconds for initial scans on testnet...${COLORS.reset}`);
-  await new Promise(resolve => setTimeout(resolve, 8000));
+  // ─── Wallet Balance Monitor ───
+  // Runs every 10 minutes. Warns if any agent wallet drops below 0.5 STT.
+  // On Railway/Render, this output appears in the deployment logs.
+  const LOW_BALANCE_THRESHOLD = hardhatEthers.parseEther("0.5");
+  const monitorWallets = async () => {
+    const wallets = [
+      { name: "Scout",       signer: scoutSigner },
+      { name: "Risk",        signer: riskSigner },
+      { name: "Strategy",    signer: strategySigner },
+      { name: "Execution",   signer: executionSigner },
+      { name: "Coordinator", signer: coordinatorSigner },
+    ];
+    for (const w of wallets) {
+      const bal = await provider.getBalance(w.signer.address);
+      if (bal < LOW_BALANCE_THRESHOLD) {
+        console.warn(
+          `${COLORS.yellow}⚠️  [WALLET MONITOR] ${w.name} wallet LOW BALANCE: ` +
+          `${hardhatEthers.formatEther(bal)} STT — top up from Somnia faucet!` +
+          `${COLORS.reset}`
+        );
+      }
+    }
+  };
 
-  console.log(`\n${COLORS.bright}${COLORS.bgRed}${COLORS.white} 🚨 MARKET EVENT: APY Spike on Somnia Alpha Pool! (0.5% → 5.0%) ${COLORS.reset}\n`);
+  // Run immediately on start, then every 10 minutes
+  monitorWallets().catch(() => {});
+  const monitorInterval = setInterval(() => monitorWallets().catch(() => {}), 10 * 60 * 1000);
 
-  const apyChangeTx = await (yieldPoolA.connect(deployerSigner) as any)
-    .setAPY(500, "Somnia testnet market event: yield opportunity detected");
-  await apyChangeTx.wait();
-  console.log(`${COLORS.green}✅ APY change confirmed on Somnia Testnet!`);
-  console.log(`   TxHash: ${explorerTx(apyChangeTx.hash)}${COLORS.reset}\n`);
+  // ─── Graceful Shutdown ───
+  const shutdown = (signal: string) => {
+    console.log(`\n${COLORS.yellow}Received ${signal}. Shutting down agents gracefully...${COLORS.reset}`);
+    clearInterval(monitorInterval);
+    scout.stop();
+    risk.stop();
+    strategy.stop();
+    execution.stop();
+    coordinator.stop();
+    console.log(`${COLORS.green}✅ All agents stopped. Exiting.${COLORS.reset}`);
+    process.exit(0);
+  };
 
-  console.log(`${COLORS.yellow}⏳ Waiting for autonomous agent pipeline to execute...${COLORS.reset}`);
-  console.log(`${COLORS.dim}   (Scout detects → Strategy proposes → Risk evaluates → Execution trades)${COLORS.reset}\n`);
+  process.on("SIGINT",  () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
 
-  // Wait longer on testnet (block confirmation times)
-  await new Promise(resolve => setTimeout(resolve, 30000));
-
-  divider();
-
-  // ─── JIT Liquidity Demo: Simulate a Whale Trade ───
-  banner("PHASE 4B: Mempool Event — JIT Liquidity (Whale Swap)");
-
-  console.log(`\n${COLORS.bright}${COLORS.bgYellow}${COLORS.white} 🐋 MEMPOOL EVENT: Whale submitting large swap! ${COLORS.reset}\n`);
-
-  // Dummy token addresses for the simulated pair
-  const tokenA = "0x1111111111111111111111111111111111111111";
-  const tokenB = "0x2222222222222222222222222222222222222222";
-  const whaleAmount = hardhatEthers.parseEther("5000"); // 5,000-unit whale swap
-
-  const whaleTx = await (mockDEX.connect(deployerSigner) as any)
-    .signalLargeSwapIntent(tokenA, tokenB, whaleAmount);
-  await whaleTx.wait();
-  console.log(`${COLORS.green}✅ Large swap pending in mempool!`);
-  console.log(`   TxHash:      ${explorerTx(whaleTx.hash)}`);
-  console.log(`   Swap Size:   5,000 units`);
-  console.log(`   Est. Fee:    ${(BigInt(whaleAmount) * 30n / 10000n)} units (0.3%)${COLORS.reset}\n`);
-
-  console.log(`${COLORS.yellow}⏳ Waiting for Scout JIT detection pipeline...`);
-  console.log(`${COLORS.dim}   (Scout detects LargeSwapPending → computes ticks → emits JIT_OPPORTUNITY_FOUND)${COLORS.reset}\n`);
-  await new Promise(resolve => setTimeout(resolve, 20000));
-
-  divider();
-
-  // ─── Read on-chain receipts ───
-  banner("PHASE 5: Somnia On-Chain Audit Trail (Receipts)");
-
-  console.log(`${COLORS.cyan}📜 Reading immutable Receipts from ALOCore...${COLORS.reset}\n`);
-  console.log(`   ${COLORS.dim}Contract: ${explorerAddr(DEPLOYED.ALOCore)}${COLORS.reset}\n`);
-
-  const receiptCount = await (core.connect(deployerSigner) as any).getReceiptCount();
-  console.log(`${COLORS.bright}Total Receipts: ${receiptCount}${COLORS.reset}\n`);
-
-  for (let i = 0; i < Number(receiptCount); i++) {
-    const receipt = await (core.connect(deployerSigner) as any).allReceipts(i);
-    console.log(`${COLORS.bright}── Receipt #${i + 1} ──${COLORS.reset}`);
-    console.log(`   Strategy ID: ${receipt.strategyId}`);
-    console.log(`   Agent:       ${receipt.agent.slice(0, 10)}...${receipt.agent.slice(-6)}`);
-    console.log(`   Role:        ${receipt.agentRole}`);
-    console.log(`   Action:      ${receipt.action}`);
-    console.log(`   Timestamp:   ${receipt.timestamp}`);
-    console.log(`   Result Data: ${receipt.resultData.slice(0, 40)}...`);
-    console.log();
-  }
-
-  divider();
-
-  // ─── Final strategy state ───
-  console.log(`${COLORS.cyan}📊 Final Strategy State:${COLORS.reset}\n`);
-  const strategyCount = await (core.connect(deployerSigner) as any).getStrategyCount();
-
-  for (let i = 1; i <= Number(strategyCount); i++) {
-    const s = await (core.connect(deployerSigner) as any).getStrategy(i);
-    const stateNames = ["NONE", "PROPOSED", "APPROVED", "REJECTED", "EXECUTED", "FAILED"];
-    console.log(`   Strategy #${i}:`);
-    console.log(`      State:      ${stateNames[s.state]}`);
-    console.log(`      Pool:       ${s.params.targetPool.slice(0, 10)}...`);
-    console.log(`      Allocation: ${hardhatEthers.formatEther(s.params.allocation)} units`);
-    console.log(`      Expected:   ${s.params.expectedAPY} bps APY`);
-    console.log(`      ProposedBy: ${s.proposedBy.slice(0, 10)}...`);
-    console.log(`      ApprovedBy: ${s.approvedBy.slice(0, 10)}...`);
-    console.log(`      ExecutedBy: ${s.executedBy.slice(0, 10)}...`);
-    console.log();
-  }
-
-  const finalLiquidity = await (core.connect(deployerSigner) as any).totalLiquidity();
-  console.log(`${COLORS.cyan}💰 Final System Liquidity: ${hardhatEthers.formatEther(finalLiquidity)} units${COLORS.reset}\n`);
-
-  // ─── PHASE 6: Deadlock Simulation & Self-Healing Demo ───
-  banner("PHASE 6: Agent Hallucination — Deadlock & Self-Healing");
-
-  console.log(`\n${COLORS.bright}${COLORS.bgRed}${COLORS.white} 🧠 AI FAILURE: Risk Agent going offline! ${COLORS.reset}\n`);
-
-  // 1. Kill the Risk Agent so it CANNOT approve the next strategy
-  risk.stop();
-  console.log(`${COLORS.red}🛑 Risk Agent manually stopped — simulating hallucination / crash.${COLORS.reset}\n`);
-
-  // 2. Trigger a new APY spike on Pool B
-  //    Scout will detect it, StrategyAgent will propose — but Risk won't respond.
-  console.log(`${COLORS.yellow}📈 Triggering secondary market event (Pool B APY spike)...${COLORS.reset}`);
-  try {
-    const apyTx2 = await (yieldPoolB.connect(deployerSigner) as any)
-      .setAPY(800, "Secondary market event: deadlock simulation");
-    await apyTx2.wait();
-    console.log(`${COLORS.green}✅ Pool B APY set to 8%. Strategy will be proposed but Risk is offline.${COLORS.reset}\n`);
-  } catch (e: any) {
-    console.log(`${COLORS.yellow}⚠️  Could not set APY: ${e.message}${COLORS.reset}\n`);
-  }
-
-  console.log(`${COLORS.yellow}⏳ Waiting ${Math.round(55)} seconds for Coordinator to detect deadlock and intervene...`);
-  console.log(`${COLORS.dim}   (Coordinator polls every 8s. Deadlock threshold: 45s.)${COLORS.reset}\n`);
-  await new Promise(resolve => setTimeout(resolve, 55000));
-
-  // 3. Bring Risk Agent back online
-  risk.start();
-  console.log(`\n${COLORS.green}✅ Risk Agent brought back online. System self-healed.${COLORS.reset}\n`);
-  console.log(`${COLORS.cyan}📜 Check ALOCore receipts for a DEADLOCK_OVERRIDE entry — the Coordinator's intervention is permanently on-chain.${COLORS.reset}\n`);
-
-  divider();
-
-  // ─── Stop all agents ───
-  scout.stop();
-  risk.stop();
-  strategy.stop();
-  execution.stop();
-  coordinator.stop();
-
-  // ─── Explorer links summary ───
-  divider();
-  console.log(`${COLORS.bright}${COLORS.cyan}🔗 Verify on Somnia Explorer:${COLORS.reset}`);
-  console.log(`   ALOCore:      ${explorerAddr(DEPLOYED.ALOCore)}`);
-  console.log(`   MessageBus:   ${explorerAddr(DEPLOYED.MessageBus)}`);
-  console.log(`   AgentRegistry:${explorerAddr(DEPLOYED.AgentRegistry)}`);
-  divider();
-
-  console.log(`${COLORS.bright}${COLORS.green}
-  ╔═══════════════════════════════════════════════════════════════╗
-  ║                                                               ║
-  ║    🏆 ALO LIVE SOMNIA TESTNET DEMO COMPLETE 🏆                ║
-  ║                                                               ║
-  ║    6 agentic capabilities proven on-chain:                    ║
-  ║    • Dual-mode Scout: APY + JIT mempool predator              ║
-  ║    • LLM Strategy (FinAgent): reasoning trace on-chain        ║
-  ║    • Risk evaluation with on-chain audit trail                ║
-  ║    • Intent-based Solver (SUAVE): path proof in Receipt       ║
-  ║    • JIT liquidity detection: tick math on MessageBus         ║
-  ║    • Self-healing: Coordinator broke the deadlock on-chain    ║
-  ║                                                               ║
-  ╚═══════════════════════════════════════════════════════════════╝
-  ${COLORS.reset}`);
-
-  process.exit(0);
+  // Keep process alive
+  await new Promise(() => {});
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error(`${COLORS.red}💥 FATAL: Agent swarm crashed:${COLORS.reset}`, error);
+  // Exit with code 1 — Railway/Render will auto-restart the process
   process.exit(1);
 });
