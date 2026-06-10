@@ -66,25 +66,41 @@ export class ExecutionAgent extends BaseAgent {
     this.abiCoder = new AbiCoder();
   }
 
+  /** Query events in 999-block chunks to respect Somnia's eth_getLogs limit. */
+  private async queryChunked(filter: any, from: number, to: number): Promise<any[]> {
+    const CHUNK = 999;
+    const all: any[] = [];
+    for (let start = from; start <= to; start += CHUNK) {
+      const end = Math.min(start + CHUNK - 1, to);
+      try {
+        const chunk = await this.messageBus.queryFilter(filter, start, end);
+        all.push(...chunk);
+      } catch (e: any) {
+        this.logWarning(`queryFilter chunk ${start}-${end} failed: ${e.message?.slice(0, 60)}`);
+      }
+    }
+    return all;
+  }
+
   start(): void {
     this.running = true;
     this.log("Starting — scanning MessageBus for INTENT_READY signals...");
 
     // Use poll-based queryFilter rather than contract.on() which requires WebSocket.
     // Somnia uses HTTP JSON-RPC only, so events are never pushed via contract.on().
-    // We poll every 10 seconds for new SignalSent events since the last seen block.
+    // Somnia also hard-caps eth_getLogs at 1000 blocks — queryChunked handles this.
     const poll = async () => {
       if (!this.running) return;
       try {
         const currentBlock = await this.messageBus.runner!.provider!.getBlockNumber();
         const fromBlock    = this.lastCheckedBlock === 0
-          ? Math.max(0, currentBlock - 10)  // On first run, look back 10 blocks to catch recent signals
+          ? Math.max(0, currentBlock - 50)  // On first run, look back 50 blocks
           : this.lastCheckedBlock + 1;
 
         if (fromBlock > currentBlock) return;
 
         const filter = this.messageBus.filters["SignalSent"]();
-        const events = await this.messageBus.queryFilter(filter, fromBlock, currentBlock);
+        const events = await this.queryChunked(filter, fromBlock, currentBlock);
 
         for (const ev of events) {
           if (!this.running) break;

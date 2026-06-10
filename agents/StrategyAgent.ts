@@ -85,26 +85,41 @@ export class StrategyAgent extends BaseAgent {
     }
   }
 
+  /** Query events in 999-block chunks to respect Somnia's eth_getLogs limit. */
+  private async queryChunked(filter: any, from: number, to: number): Promise<any[]> {
+    const CHUNK = 999;
+    const all: any[] = [];
+    for (let start = from; start <= to; start += CHUNK) {
+      const end = Math.min(start + CHUNK - 1, to);
+      try {
+        const chunk = await this.messageBus.queryFilter(filter, start, end);
+        all.push(...chunk);
+      } catch (e: any) {
+        this.logWarning(`queryFilter chunk ${start}-${end} failed: ${e.message?.slice(0, 60)}`);
+      }
+    }
+    return all;
+  }
+
   start(): void {
     this.running = true;
     this.log("Starting — listening for OPPORTUNITY_FOUND and USER_INTENT signals...");
 
     // Poll-based listener for MessageBus signals.
     // Somnia uses HTTP JSON-RPC only — contract.on() is never triggered.
-    // We query for new SignalSent events every 12 seconds (one Somnia block ≈ 1s,
-    // but we use 12s to avoid hammering the RPC).
+    // Somnia also hard-caps eth_getLogs at 1000 blocks — queryChunked handles this.
     const poll = async () => {
       if (!this.running) return;
       try {
         const currentBlock = await this.messageBus.runner!.provider!.getBlockNumber();
         const fromBlock    = this.lastCheckedBlock === 0
-          ? Math.max(0, currentBlock - 10)
+          ? Math.max(0, currentBlock - 50)
           : this.lastCheckedBlock + 1;
 
         if (fromBlock > currentBlock) return;
 
         const filter = this.messageBus.filters["SignalSent"]();
-        const events = await this.messageBus.queryFilter(filter, fromBlock, currentBlock);
+        const events = await this.queryChunked(filter, fromBlock, currentBlock);
 
         for (const ev of events) {
           if (!this.running) break;
