@@ -119,9 +119,9 @@ function explorerAddr(addr: string): string {
   return `${EXPLORER}/address/${addr}`;
 }
 
-function requireEnv(key: string): string {
-  const val = process.env[key];
-  if (!val) throw new Error(`Missing required env var: ${key}. Check your .env file.`);
+function requireEnv(key: string, fallbackKey?: string): string {
+  const val = process.env[key] || (fallbackKey ? process.env[fallbackKey] : undefined);
+  if (!val) throw new Error(`Missing required env var: ${key}${fallbackKey ? ` or ${fallbackKey}` : ''}. Check your .env file or Railway variables.`);
   return val;
 }
 
@@ -138,7 +138,7 @@ async function main(): Promise<void> {
   ${COLORS.reset}`);
 
   // ─── Load agent private keys from .env ───
-  const deployerKey     = requireEnv("PRIVATE_KEY");
+  const deployerKey     = requireEnv("PRIVATE_KEY", "DEPLOYER_PRIVATE_KEY");
   const scoutKey        = requireEnv("SCOUT_PRIVATE_KEY");
   const riskKey         = requireEnv("RISK_PRIVATE_KEY");
   const strategyKey     = requireEnv("STRATEGY_PRIVATE_KEY");
