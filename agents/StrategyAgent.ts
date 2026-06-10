@@ -62,6 +62,8 @@ export class StrategyAgent extends BaseAgent {
   private processingLock: boolean = false;
   private abiCoder: AbiCoder;
   private groq: Groq | null = null;
+  private pollInterval: NodeJS.Timeout | null = null;
+  private lastCheckedBlock: number = 0;
 
   constructor(
     signer: Signer,
@@ -87,84 +89,55 @@ export class StrategyAgent extends BaseAgent {
     this.running = true;
     this.log("Starting — listening for OPPORTUNITY_FOUND and USER_INTENT signals...");
 
-    // Listen for signals from the MessageBus.
-    // This is the core of agent-to-agent coordination on Somnia:
-    // the StrategyAgent REACTS to the ScoutAgent's on-chain messages
-    // AND to direct USER_INTENT signals from the frontend dashboard.
-    this.messageBus.on(
-      "SignalSent",
-      async (
-        signalId: string,
-        from: string,
-        signalType: string,
-        data: string,
-        timestamp: bigint
-      ) => {
-        if (!this.running) return;
-        if (signalType === "OPPORTUNITY_FOUND") {
-          await this.handleOpportunity(signalId, from, data);
-        } else if (signalType === "USER_INTENT") {
-          await this.handleUserIntent(signalId, from, data);
+    // Poll-based listener for MessageBus signals.
+    // Somnia uses HTTP JSON-RPC only — contract.on() is never triggered.
+    // We query for new SignalSent events every 12 seconds (one Somnia block ≈ 1s,
+    // but we use 12s to avoid hammering the RPC).
+    const poll = async () => {
+      if (!this.running) return;
+      try {
+        const currentBlock = await this.messageBus.runner!.provider!.getBlockNumber();
+        const fromBlock    = this.lastCheckedBlock === 0
+          ? Math.max(0, currentBlock - 10)
+          : this.lastCheckedBlock + 1;
+
+        if (fromBlock > currentBlock) return;
+
+        const filter = this.messageBus.filters["SignalSent"]();
+        const events = await this.messageBus.queryFilter(filter, fromBlock, currentBlock);
+
+        for (const ev of events) {
+          if (!this.running) break;
+          const [signalId, from, signalType, data] = ev.args as [string, string, string, string, bigint];
+          if (signalType === "OPPORTUNITY_FOUND") {
+            await this.handleOpportunity(signalId, from, data);
+          } else if (signalType === "USER_INTENT") {
+            await this.handleUserIntent(signalId, from, data);
+          }
         }
+
+        this.lastCheckedBlock = currentBlock;
+      } catch (err: any) {
+        this.logWarning(`Poll error: ${err.message?.slice(0, 80)}`);
       }
-    );
+    };
+
+    poll();
+    this.pollInterval = setInterval(poll, 12_000);
 
     this.logSuccess("Listening for scout signals and user intents on MessageBus");
-
-    // ─── Intent Originator: Emit INTENT_READY after Risk approval ───
-    // When Risk approves a strategy, instead of letting the Execution Agent
-    // just react to ALOCore directly, we post an INTENT_READY signal on the
-    // MessageBus. This decouples WHAT we want from HOW it gets executed.
-    // The ExecutionAgent (Solver) picks this up and independently decides the
-    // optimal execution path — mapping to the Flashbots SUAVE architecture.
-    this.core.on(
-      "StrategyEvaluated",
-      async (strategyId: bigint, evaluator: string, approved: boolean, reason: string) => {
-        if (!this.running || !approved) return;
-
-        try {
-          const sid = Number(strategyId);
-          const strategy = await this.core.getStrategy(sid);
-          this.logAction(`Strategy #${sid} APPROVED by Risk. Posting Intent to MessageBus...`);
-
-          // Encode Intent constraints: WHAT we want, not HOW to get it.
-          // The Solver (ExecutionAgent) independently determines the execution path.
-          const intentData = this.abiCoder.encode(
-            ["uint256", "address", "uint256", "uint256"],
-            [
-              strategyId,
-              strategy.params.targetPool,
-              strategy.params.allocation,
-              strategy.params.expectedAPY,
-            ]
-          );
-
-          const tx = await this.messageBus.connect(this.wallet).emitSignal(
-            "INTENT_READY",
-            intentData,
-            {
-              gasLimit:             5_000_000,
-              maxFeePerGas:         7000000000n,
-              maxPriorityFeePerGas: 7000000000n,
-            }
-          );
-          await tx.wait();
-          this.logSuccess(`Intent #${sid} posted to MessageBus. Waiting for Solvers...`);
-        } catch (error: any) {
-          this.logError(`Failed to post Intent: ${error.message}`);
-        }
-      }
-    );
-
     this.logSuccess("Intent Originator active — will post INTENT_READY on Risk approvals");
   }
 
   stop(): void {
     this.running = false;
-    this.messageBus.removeAllListeners("SignalSent");
-    this.core.removeAllListeners("StrategyEvaluated");
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
     this.log("Stopped listening for signals");
   }
+
 
   /**
    * ─── Handle Natural Language Intent from Frontend Dashboard ───

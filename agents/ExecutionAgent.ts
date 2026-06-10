@@ -51,6 +51,8 @@ export class ExecutionAgent extends BaseAgent {
   private mockDEX: Contract;
   private processedSignals: Set<string> = new Set(); // Prevent double-solving by signalId
   private abiCoder: AbiCoder;
+  private pollInterval: NodeJS.Timeout | null = null;
+  private lastCheckedBlock: number = 0;
 
   constructor(
     signer: Signer,
@@ -68,33 +70,52 @@ export class ExecutionAgent extends BaseAgent {
     this.running = true;
     this.log("Starting — scanning MessageBus for INTENT_READY signals...");
 
-    // The Solver listens on the MessageBus for Intents posted by the StrategyAgent.
-    // It does NOT react to ALOCore directly — it's the MessageBus that acts as the
-    // decentralized "intent mempool" in this architecture.
-    this.messageBus.on(
-      "SignalSent",
-      async (
-        signalId: string,
-        from: string,
-        signalType: string,
-        data: string,
-        timestamp: bigint
-      ) => {
-        if (!this.running) return;
-        if (signalType === "INTENT_READY") {
-          await this.solveIntent(signalId, data);
-        }
-      }
-    );
+    // Use poll-based queryFilter rather than contract.on() which requires WebSocket.
+    // Somnia uses HTTP JSON-RPC only, so events are never pushed via contract.on().
+    // We poll every 10 seconds for new SignalSent events since the last seen block.
+    const poll = async () => {
+      if (!this.running) return;
+      try {
+        const currentBlock = await this.messageBus.runner!.provider!.getBlockNumber();
+        const fromBlock    = this.lastCheckedBlock === 0
+          ? Math.max(0, currentBlock - 10)  // On first run, look back 10 blocks to catch recent signals
+          : this.lastCheckedBlock + 1;
 
-    this.logSuccess("Solver active. Ready to bid on Intents from MessageBus.");
+        if (fromBlock > currentBlock) return;
+
+        const filter = this.messageBus.filters["SignalSent"]();
+        const events = await this.messageBus.queryFilter(filter, fromBlock, currentBlock);
+
+        for (const ev of events) {
+          if (!this.running) break;
+          const [signalId, , signalType, data] = ev.args as [string, string, string, string, bigint];
+          if (signalType === "INTENT_READY") {
+            await this.solveIntent(signalId, data);
+          }
+        }
+
+        this.lastCheckedBlock = currentBlock;
+      } catch (err: any) {
+        this.logWarning(`Poll error: ${err.message?.slice(0, 80)}`);
+      }
+    };
+
+    // Run immediately then every 10 seconds
+    poll();
+    this.pollInterval = setInterval(poll, 10_000);
+
+    this.logSuccess("Solver active. Polling MessageBus every 10s for INTENT_READY signals.");
   }
 
   stop(): void {
     this.running = false;
-    this.messageBus.removeAllListeners("SignalSent");
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
     this.log("Solver offline");
   }
+
 
   private async solveIntent(signalId: string, data: string): Promise<void> {
     try {
