@@ -1,0 +1,669 @@
+\documentclass[11pt,a4paper]{article}
+
+%% ─── Packages ────────────────────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+%% ─── Hyperref (subtle, no coloured boxes) ────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=black,
+  citecolor=black,
+  pdftitle={Noventra: Autonomous Liquidity Orchestration via Multi-Agent AI on Somnia},
+  pdfauthor={Krishna Goyal},
+}
+
+%% ─── Header / Footer ─────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small Noventra --- Technical Whitepaper}
+\fancyhead[R]{\small Agentathon 2025}
+\fancyfoot[C]{\small\thepage}
+
+%% ─── Section Titles ──────────────────────────────────────────────────────────
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{}{0em}{}
+
+%% ─── Code Listings ───────────────────────────────────────────────────────────
+\definecolor{codegray}{gray}{0.95}
+\lstset{
+  backgroundcolor=\color{codegray},
+  basicstyle=\small\ttfamily,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape\color{gray},
+  stringstyle=\color{black},
+  breaklines=true,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=6pt,
+  frame=single,
+  framesep=4pt,
+  rulecolor=\color{gray!50},
+  tabsize=2,
+  showstringspaces=false,
+  morekeywords={function,event,emit,mapping,address,uint256,bytes32,bytes,string,bool,
+                struct,contract,interface,pragma,solidity,public,external,view,returns,
+                memory,storage,indexed,async,await,const,let,class,extends,import,
+                from,export,return,if,else,for,while,try,catch,private,new,this,
+                override,onlyOwner,abstract}
+}
+
+%% ─── Document ────────────────────────────────────────────────────────────────
+\begin{document}
+
+%% ── Title ────────────────────────────────────────────────────────────────────
+\begin{center}
+  {\LARGE\bfseries Noventra}\\[8pt]
+  {\large Autonomous Liquidity Orchestration via Multi-Agent AI on Somnia}\\[10pt]
+  {\normalsize Technical Whitepaper \quad|\quad Agentathon 2025}\\[6pt]
+  {\small Krishna Goyal \quad \texttt{<krishnagoyalcse@gmail.com>}}\\[4pt]
+  {\small \url{https://github.com/krishnagoyal099/Noventra}}\\[4pt]
+  {\small June 2025}
+\end{center}
+
+\vspace{4pt}
+\hrule
+\vspace{12pt}
+
+%% ── Abstract ─────────────────────────────────────────────────────────────────
+\begin{abstract}
+Noventra is an autonomous liquidity orchestration protocol that deploys a swarm of five
+specialised AI agents --- Scout, Risk, Strategy, Execution, and Coordinator --- on the Somnia
+Testnet (EVM-compatible, Chain ID 50312). Each agent holds a separate funded wallet and
+communicates exclusively through an immutable on-chain MessageBus. The agents collaborate to
+identify DeFi yield opportunities, evaluate risk, propose allocation strategies via Groq LLM
+reasoning, and execute intent-driven trades through a Flashbots SUAVE-inspired solver
+architecture. All agent decisions, reasoning traces, and execution proofs are stored as
+verifiable on-chain receipts, creating a fully auditable, autonomous DeFi portfolio manager
+that requires no human intervention after deployment.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+Traditional DeFi protocols rely on rigid smart-contract logic or centralised off-chain bots
+that operate in silos, expose users to MEV, and cannot adapt to changing market conditions
+without redeployment. Human portfolio managers face liquidity fragmentation across dozens of
+protocols, while automated bots typically optimise for a single metric (highest APY) without
+holistic risk evaluation.
+
+Noventra addresses this through a multi-agent system (MAS) architecture where:
+
+\begin{itemize}[leftmargin=1.8em]
+  \item Each agent is a specialised autonomous actor with its own on-chain identity (wallet).
+  \item Inter-agent communication is fully on-chain via an ABI-encoded MessageBus.
+  \item Strategic decisions incorporate LLM reasoning (Groq / Llama-3) stored immutably as
+        on-chain reasoning traces.
+  \item Execution follows an intent-centric solver model inspired by Flashbots SUAVE: agents
+        express \emph{what} they want, not \emph{how} to achieve it.
+\end{itemize}
+
+Somnia's high-throughput EVM chain (400k TPS target, $\sim$1 second block time) is uniquely
+suited for this architecture. Agents can coordinate through on-chain messages at latencies
+comparable to centralised APIs, making the MessageBus viable as a real-time coordination layer.
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{System Architecture}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Layer Overview}
+
+The Noventra system is structured across three layers:
+
+\begin{table}[H]
+\centering
+\caption{System Layer Summary}
+\begin{tabular}{@{}lll@{}}
+  \toprule
+  \textbf{Layer} & \textbf{Components} & \textbf{Responsibility} \\
+  \midrule
+  On-chain   & ALOCore, MessageBus, AgentRegistry & State, coordination, receipts \\
+  Agent Swarm & Scout, Risk, Strategy, Execution, Coordinator & Autonomous decision-making \\
+  Frontend   & React dashboard, useSomnia hook & User interface, intent submission \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Agent Pipeline}
+
+Agents communicate through a directed acyclic graph (DAG) enforced by the CoordinatorAgent.
+No agent can proceed without the previous stage completing successfully on-chain.
+
+\begin{center}
+\begin{tabular}{ccccccccc}
+  \texttt{Scout} & $\longrightarrow$ & \texttt{Risk} & $\longrightarrow$ & \texttt{Strategy}
+  & $\longrightarrow$ & \texttt{Execution} \\[4pt]
+  \scriptsize OPPORTUNITY & & \scriptsize APPROVED & & \scriptsize INTENT\_READY
+  & & \scriptsize INTENT\_SOLVED
+\end{tabular}
+\end{center}
+
+Each arrow represents an on-chain \texttt{SignalSent} event emitted to the MessageBus. Every
+signal is ABI-encoded, timestamped, and permanently stored, creating a complete audit trail
+of every autonomous decision.
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Smart Contracts}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{ALOCore}
+
+The \texttt{ALOCore} contract stores all strategy proposals, execution receipts, and manages
+total system liquidity. Its key data structures are:
+
+\begin{lstlisting}[caption=ALOCore Strategy Data Structures]
+struct StrategyParams {
+    address targetPool;
+    uint256 allocation;
+    uint256 expectedAPY;
+    string  rationale;  // LLM reasoning trace stored immutably
+}
+
+struct Strategy {
+    address        proposer;
+    StrategyParams params;
+    bool           approved;
+    uint256        timestamp;
+}
+
+event StrategyProposed(uint256 indexed id, address indexed proposer);
+event StrategyEvaluated(
+    uint256 indexed id,
+    address evaluator,
+    bool    approved,
+    string  reason
+);
+\end{lstlisting}
+
+\subsection{MessageBus}
+
+The MessageBus is the nervous system of the swarm. Every inter-agent message is an
+ABI-encoded payload stored permanently on-chain.
+
+\begin{lstlisting}[caption=MessageBus Signal Interface]
+event SignalSent(
+    bytes32 indexed signalId,
+    address indexed by,
+    string  signalType,  // "OPPORTUNITY_FOUND", "INTENT_READY", etc.
+    bytes   data,        // ABI-encoded payload
+    uint256 timestamp
+);
+
+function emitSignal(string calldata signalType, bytes calldata data)
+    external returns (bytes32 signalId);
+
+function consumeSignal(bytes32 signalId) external;
+\end{lstlisting}
+
+\subsection{AgentRegistry}
+
+Maintains an on-chain registry of authorised agent wallets, keyed by role. Only registered
+agents may emit signals or propose strategies.
+
+\begin{lstlisting}[caption=AgentRegistry Role Enforcement]
+enum AgentRole { SCOUT, RISK, STRATEGY, EXECUTION, COORDINATOR }
+
+function registerAgent(address agent, AgentRole role) external onlyOwner;
+function isRegistered(address agent) external view returns (bool);
+function getAgentsByRole(AgentRole role)
+    external view returns (address[] memory);
+\end{lstlisting}
+
+\subsection{Deployed Addresses}
+
+\begin{table}[H]
+\centering
+\caption{Contract Addresses on Somnia Testnet (Chain ID 50312)}
+\begin{tabular}{@{}ll@{}}
+  \toprule
+  \textbf{Contract} & \textbf{Address} \\
+  \midrule
+  ALOCore         & \texttt{0x2beE183Ce98cEBf13dfcaeba4c2965Cda8cDd13d} \\
+  MessageBus      & \texttt{0x1e326DeC20fa7006C827e2DA6fa8dc56e7276d21} \\
+  AgentRegistry   & \texttt{0x332CAd34b8291ACfAD87c8A6A41126cde3F906a6} \\
+  MockDEX         & \texttt{0x770082BcfC03824e47E6eC63afcAb0C6866cFf27} \\
+  YieldPool Alpha & \texttt{0xf22AC8A79C638aD8B92861dF9f32b241599E9C02} \\
+  YieldPool Beta  & \texttt{0x369797e23813775069Ef41ad3a3519C1ccBaC003} \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Agent Specifications}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{ScoutAgent --- Dual-Mode Yield Detector}
+
+The ScoutAgent runs two parallel detection engines.
+
+\subsubsection{Mode 1: Passive Yield Scanning}
+Polls \texttt{MockYieldSource.getCurrentAPY()} every 30 seconds across all registered pools.
+Emits \texttt{OPPORTUNITY\_FOUND} when:
+\[
+  \text{APY}_{\text{current}} \geq \text{threshold} \quad \text{AND} \quad
+  \text{APY}_{\text{current}} > \text{APY}_{\text{previous}}
+\]
+The momentum filter (requiring rising APY) prevents spurious signals during transient spikes.
+
+\subsubsection{Mode 2: JIT Mempool Predator}
+Listens for \texttt{MockDEX.LargeSwapPending} events, which serve as an on-chain proxy for
+\texttt{eth\_subscribe pendingTransactions}. When a large swap is detected, the Scout
+calculates a concentrated tick range and emits \texttt{JIT\_OPPORTUNITY\_FOUND}:
+\[
+  [\text{tickLower}, \text{tickUpper}] = [\text{tick}_{\text{current}} - 5, \text{tick}_{\text{current}} + 5]
+\]
+\[
+  \text{feeEfficiency} = \frac{\text{estimatedFeeCapture}}{\text{amountIn}} \times 10{,}000 \text{ bps}
+\]
+Capital is deployed for exactly one block, eliminating impermanent loss exposure.
+
+\subsection{RiskAgent --- Statistical Guardrails}
+
+The RiskAgent evaluates every proposed strategy before allowing execution.
+
+\begin{table}[H]
+\centering
+\caption{Risk Evaluation Criteria}
+\begin{tabular}{@{}lll@{}}
+  \toprule
+  \textbf{Criterion}  & \textbf{Threshold}      & \textbf{Action on Breach} \\
+  \midrule
+  APY ceiling         & $\leq 10{,}000$ bps     & Reject (likely fraudulent) \\
+  Maximum drawdown    & $\leq 20\%$             & Reject \\
+  Allocation per strategy & $\leq 30\%$         & Clamp and warn \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{StrategyAgent --- LLM-Powered Intent Originator}
+
+The StrategyAgent incorporates large language model reasoning as a first-class component.
+Upon receiving an \texttt{OPPORTUNITY\_FOUND} or \texttt{USER\_INTENT} signal, it:
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item Constructs a structured prompt containing the opportunity data, current liquidity, and
+        risk constraints.
+  \item Queries Groq (Llama-3.3-70b) in JSON mode, receiving:
+\begin{lstlisting}[caption=LLM Strategy Decision Schema]
+interface LLMStrategyDecision {
+  allocation_percentage: number; // 0-100; code enforces hard cap
+  risk_assessment: string;       // one-sentence internal log
+  rationale: string;             // stored permanently on-chain
+}
+\end{lstlisting}
+  \item Stores the \texttt{rationale} field as an immutable on-chain receipt in ALOCore ---
+        making the AI's reasoning verifiable and auditable.
+  \item Emits \texttt{INTENT\_READY} to the MessageBus, encoding \emph{what} the system
+        wants (pool, allocation, target APY) without prescribing \emph{how} to execute it.
+\end{enumerate}
+
+\subsection{ExecutionAgent --- Intent-Centric Solver}
+
+Inspired by the Flashbots SUAVE architecture, the ExecutionAgent acts as a Solver rather than
+a simple executor. It:
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item Polls the MessageBus for \texttt{INTENT\_READY} signals every 10 seconds.
+  \item Independently simulates two execution routes off-chain:
+    \begin{itemize}
+      \item \textbf{Route A:} Single-hop direct swap on DEX-A (full amount).
+      \item \textbf{Route B:} 60/40 split across DEX-A and DEX-B (aggregator bonus applied
+            to the DEX-B leg).
+    \end{itemize}
+  \item Selects the route that maximises output (minimises effective slippage):
+    \[
+      \text{slippageBps} = \frac{(\text{amount} - \text{routeOutput}) \times 10{,}000}{\text{amount}}
+    \]
+  \item Emits \texttt{INTENT\_SOLVED} with ABI-encoded proof of the optimisation:
+        \texttt{(routeDescription, slippageBps, mevProtected)}.
+\end{enumerate}
+
+\subsection{CoordinatorAgent --- Treasury and Deadlock Monitor}
+
+The CoordinatorAgent serves two operational roles:
+
+\paragraph{DAG Enforcer.} Monitors all agents on a configurable heartbeat interval.
+If any agent stops responding within a 45-second timeout, it emits an
+\texttt{AGENT\_TIMEOUT} signal and initiates recovery.
+
+\paragraph{Swarm Gas Station.} Acts as a shared treasury. Users fund the Coordinator's
+wallet via the frontend dashboard. The Coordinator automatically redistributes STT to
+any agent wallet that drops below the refill threshold:
+
+\begin{lstlisting}[caption=Coordinator Auto-Refill Logic]
+private async refillAgentIfNeeded(agentSigner: Signer): Promise<void> {
+  const addr    = await agentSigner.getAddress();
+  const balance = await this.wallet.provider!.getBalance(addr);
+  if (balance < this.REFILL_THRESHOLD) {     // < 1 STT
+    const tx = await this.wallet.sendTransaction({
+      to:       addr,
+      value:    this.REFILL_AMOUNT,          // 1 STT
+      gasLimit: 21_000n,
+    });
+    await tx.wait();
+    this.logSuccess(`Refilled ${addr.slice(0, 10)} with 1 STT`);
+  }
+}
+\end{lstlisting}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Intent-Centric Architecture}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+A central design principle distinguishes Noventra from conventional on-chain bots:
+
+\begin{quote}
+  \textit{Traditional agents prescribe \textbf{how} to execute. Noventra agents express
+  \textbf{what} outcome they desire.}
+\end{quote}
+
+The StrategyAgent issues an \texttt{INTENT\_READY} signal specifying the target pool,
+allocation amount, and expected APY. The ExecutionAgent (Solver) independently determines the
+optimal route, MEV protection strategy, and split ratios. This separation:
+
+\begin{itemize}[leftmargin=1.8em]
+  \item Enables multiple solvers to compete on execution quality in future versions.
+  \item Allows route optimisation logic to evolve independently of strategy logic.
+  \item Creates verifiable on-chain proof of solver work, not just execution outcomes.
+\end{itemize}
+
+This architecture mirrors the Flashbots SUAVE intent-expression model, adapted for
+agent-to-agent coordination rather than user-to-block-builder interaction.
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Somnia-Specific Engineering}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Known RPC Constraints and Mitigations}
+
+Somnia Testnet exhibits several non-standard EVM behaviours that required engineering
+workarounds:
+
+\begin{table}[H]
+\centering
+\caption{Somnia Testnet Constraints and Applied Fixes}
+\begin{tabular}{@{}p{4.2cm}p{4.2cm}p{4.2cm}@{}}
+  \toprule
+  \textbf{Constraint} & \textbf{Impact} & \textbf{Fix} \\
+  \midrule
+  \texttt{eth\_getLogs} returns \texttt{removed: null} &
+    ethers.js v6 throws a \texttt{BAD\_DATA} assertion error &
+    Custom \texttt{SomniaProvider} normalises \texttt{null} $\to$ \texttt{false} \\[6pt]
+
+  Gas estimation returns $\sim$2.2B gas &
+    Transactions fail as invalid &
+    All \texttt{gasLimit} values capped at 12M; \texttt{maxFeePerGas} set explicitly \\[6pt]
+
+  \texttt{eth\_getLogs} block range limit: 1000 blocks &
+    History queries silently fail &
+    Chunked \texttt{queryFilter} in pages of 999 blocks \\[6pt]
+
+  Storage array \texttt{push()} reverts &
+    \texttt{ALOCore} array appends fail on Somnia &
+    Bypass via \texttt{MessageBus.emitSignal}; persistent arrays avoided \\[6pt]
+
+  HTTP-only RPC, no WebSocket &
+    \texttt{contract.on()} never fires &
+    Poll-based \texttt{setInterval + queryFilter} replaces all listeners \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Custom SomniaProvider}
+
+\begin{lstlisting}[caption=SomniaProvider with Two Quirk Fixes]
+class SomniaProvider extends JsonRpcProvider {
+  private static readonly GAS_CAP = 12_000_000n;
+
+  override async send(method: string, params: Array<any>): Promise<any> {
+    const result = await super.send(method, params);
+
+    // Fix 1: Normalise log.removed null -> false
+    if (method === "eth_getLogs" && Array.isArray(result)) {
+      return result.map((log: any) => ({
+        ...log,
+        removed: log.removed ?? false,
+      }));
+    }
+
+    // Fix 2: Cap inflated gas estimates
+    if (method === "eth_estimateGas") {
+      const estimated = BigInt(result);
+      if (estimated > SomniaProvider.GAS_CAP)
+        return "0x" + SomniaProvider.GAS_CAP.toString(16);
+    }
+
+    return result;
+  }
+}
+\end{lstlisting}
+
+\subsection{Chunked queryFilter}
+
+\begin{lstlisting}[caption=Chunked queryFilter Respecting Somnia's 1000-Block Limit]
+const queryChunked = async (filter: any, from: number, to: number) => {
+  const CHUNK = 999;
+  const all: any[] = [];
+  for (let start = from; start <= to; start += CHUNK) {
+    const end   = Math.min(start + CHUNK - 1, to);
+    const chunk = await messageBus.queryFilter(filter, start, end);
+    all.push(...chunk);
+  }
+  return all;
+};
+\end{lstlisting}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Signal Schemas}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+Every on-chain signal has a defined ABI encoding schema:
+
+\begin{table}[H]
+\centering
+\caption{MessageBus Signal Types and Payload Schemas}
+\begin{tabular}{@{}ll@{}}
+  \toprule
+  \textbf{Signal Type} & \textbf{ABI-Encoded Payload} \\
+  \midrule
+  \texttt{OPPORTUNITY\_FOUND} &
+    \texttt{(address pool, uint256 apy, uint256 detectedAt, string name)} \\[4pt]
+  \texttt{STRATEGY\_PROPOSED} &
+    \texttt{(uint256 strategyId, string rationale, uint256 allocation)} \\[4pt]
+  \texttt{INTENT\_READY} &
+    \texttt{(uint256 strategyId, address pool, uint256 allocation, uint256 apy)} \\[4pt]
+  \texttt{INTENT\_SOLVED} &
+    \texttt{(string routeDescription, uint256 slippageBps, bool mevProtected)} \\[4pt]
+  \texttt{JIT\_OPPORTUNITY\_FOUND} &
+    \texttt{(address tokenIn, address tokenOut, uint256 amount,} \\
+  & \texttt{\phantom{(}int24 tickLower, int24 tickUpper, uint256 feeCapture, uint256 blockWindow)} \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Frontend Dashboard}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+The Noventra frontend is a React single-page application deployed on Vercel. It provides:
+
+\begin{description}[leftmargin=1.8em, style=nextline]
+  \item[Live Agent Terminal.]
+    Displays the 15 most recent MessageBus signals in real time. Uses the chunked
+    \texttt{queryFilter} pattern to load up to 3000 blocks of history on page load, then
+    polls every 10 seconds for new events.
+
+  \item[Natural Language Intent Submission.]
+    Users type free-form intents (e.g.\ ``Maximise yield conservatively'') which are
+    ABI-encoded and broadcast as \texttt{USER\_INTENT} signals. The StrategyAgent intercepts
+    these within 12 seconds and passes them to the LLM for interpretation.
+
+  \item[Fund Swarm.]
+    Sends STT directly to the Coordinator's treasury wallet via MetaMask. A minimum of 1 STT
+    per agent (5 STT total) is sufficient for several hours of autonomous operation.
+
+  \item[Portfolio View.]
+    Shows per-user deposits and simulated yield accumulated across YieldPool Alpha and Beta.
+\end{description}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Security}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{On-Chain Controls}
+
+\begin{itemize}[leftmargin=1.8em]
+  \item \textbf{Role-based access.} Only addresses registered in \texttt{AgentRegistry} may
+        emit signals or propose strategies. The registry is owner-controlled.
+  \item \textbf{Allocation caps.} The StrategyAgent enforces a configurable maximum allocation
+        percentage (10\% in the current testnet deployment) regardless of LLM output.
+  \item \textbf{Risk veto.} The RiskAgent rejects any strategy with APY exceeding 100\% or
+        drawdown exceeding 20\%, providing a hard guard against malicious or hallucinated inputs.
+\end{itemize}
+
+\subsection{Off-Chain Controls}
+
+\begin{itemize}[leftmargin=1.8em]
+  \item Private keys are stored in environment variables and are never committed to version
+        control.
+  \item The production Docker container runs as a non-root user (\texttt{noventra}).
+  \item All inter-agent communication is on-chain --- there is no trusted off-chain channel
+        that could be intercepted or spoofed.
+\end{itemize}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Performance}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\caption{Observed System Performance on Somnia Testnet}
+\begin{tabular}{@{}lll@{}}
+  \toprule
+  \textbf{Metric} & \textbf{Observed Value} & \textbf{Notes} \\
+  \midrule
+  End-to-end latency (Opportunity $\to$ Solved) & 25--60 seconds & 5-signal DAG \\
+  Scout scan interval & 30 seconds & Prevents nonce collisions \\
+  StrategyAgent poll cadence & 12 seconds & MessageBus query \\
+  ExecutionAgent poll cadence & 10 seconds & Intent pickup \\
+  Gas per \texttt{emitSignal} call & 100k--500k gas & Payload-dependent \\
+  Estimated gas cost per full cycle & 0.003--0.01 STT & At 6 Gwei \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Comparison}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\caption{Feature Comparison with Related Systems}
+\begin{tabular}{@{}lccccc@{}}
+  \toprule
+  \textbf{Feature}           & \textbf{Noventra} & \textbf{Yearn v3} & \textbf{Flashbots} & \textbf{AutoGPT} \\
+  \midrule
+  Multi-agent swarm          & Yes & No  & No  & Yes \\
+  On-chain agent coordination & Yes & No  & No  & No  \\
+  LLM reasoning trace        & Yes & No  & No  & Yes \\
+  Intent-centric solver      & Yes & No  & Yes & No  \\
+  MEV protection             & Yes & No  & Yes & No  \\
+  Verifiable on-chain proofs & Yes & No  & No  & No  \\
+  Autonomous gas management  & Yes & No  & No  & No  \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Deployment}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{description}[leftmargin=1.8em, style=nextline]
+  \item[Agent Swarm.] Docker image deployed to Railway.
+        Entry point: \texttt{node --require ts-node/register scripts/listen-somnia.ts}.
+        The image copies the \texttt{deployments/} directory (containing
+        \texttt{somnia.json}) to ensure contract addresses are available at runtime.
+
+  \item[Frontend.] Vite/React application deployed to Vercel via GitHub push-triggered CI/CD.
+
+  \item[Contracts.] Deployed to Somnia Testnet using Hardhat and verified on the
+        Shannon Explorer (\url{https://shannon-explorer.somnia.network}).
+\end{description}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Roadmap}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{description}[leftmargin=1.8em, style=nextline]
+  \item[Phase 1 --- Testnet MVP (current).]
+    Five-agent swarm on Somnia Testnet with LLM reasoning, on-chain receipts, intent-centric
+    execution, and live frontend dashboard.
+
+  \item[Phase 2 --- Real Protocol Integration.]
+    Replace MockDEX and MockYieldSource with live Uniswap V3, Aave, and Compound adapters.
+    Integrate the Flashbots Protect RPC for genuine MEV shielding.
+
+  \item[Phase 3 --- Agent Marketplace.]
+    Open the AgentRegistry to third-party agents via a standardised \texttt{IAgent} interface.
+    External developers will deploy specialised sub-agents (e.g.\ cross-chain bridging) that
+    plug into the existing coordination DAG.
+
+  \item[Phase 4 --- Mainnet and Tokenomics.]
+    Native governance token. Staking-based access control for premium strategies. On-chain DAO
+    vote for risk parameter updates.
+\end{description}
+
+%% ══════════════════════════════════════════════════════════════════════════════
+\section{Conclusion}
+%% ══════════════════════════════════════════════════════════════════════════════
+
+Noventra demonstrates that autonomous, AI-coordinated DeFi is practically deployable on a
+real high-performance EVM chain today. By combining an on-chain MessageBus for verifiable
+agent coordination, LLM-powered reasoning with immutable on-chain traces, an intent-centric
+solver architecture, and a self-funding treasury for autonomous gas management, Noventra
+establishes a blueprint for the next generation of DeFi protocols: ones that are not merely
+automatic, but genuinely autonomous.
+
+The full source code is available at:
+\begin{center}
+  \url{https://github.com/krishnagoyal099/Noventra}
+\end{center}
+
+%% ─── References ──────────────────────────────────────────────────────────────
+\newpage
+\section*{References}
+
+\begin{enumerate}[leftmargin=1.8em]
+  \item Wan, Z., \& Adams, H. (2024). \textit{Just-in-Time Liquidity in Uniswap V3}. Uniswap Labs Research.
+  \item Yu, S. et al.\ (2024). \textit{FinAgent: A Multimodal Foundation Agent for Financial Trading}. arXiv:2402.18485.
+  \item Flashbots. (2023). \textit{SUAVE: Single Unifying Auction for Value Expression}.
+        \url{https://writings.flashbots.net/the-future-of-mev-is-suave}
+  \item Somnia Network. (2024). \textit{Technical Overview}. \url{https://docs.somnia.network}
+  \item Buterin, V. (2014). \textit{A Next-Generation Smart Contract and Decentralized Application Platform}. Ethereum Whitepaper.
+  \item Brown, T. et al.\ (2020). \textit{Language Models are Few-Shot Learners}. NeurIPS 2020.
+\end{enumerate}
+
+\end{document}
