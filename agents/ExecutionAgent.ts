@@ -152,9 +152,9 @@ export class ExecutionAgent extends BaseAgent {
         [optimalPath.routeDescription, optimalPath.slippageBps, optimalPath.mevProtected]
       );
 
-      this.logAction(`Submitting Solution for Intent #${sid} to Somnia (ALOCore.solveIntent)...`);
-      const tx = await this.core.connect(this.wallet).solveIntent(
-        sid,
+      this.logAction(`Emitting INTENT_SOLVED Solution for Intent #${sid} to MessageBus (bypassing ALOCore)...`);
+      const tx = await this.messageBus.connect(this.wallet).emitSignal(
+        "INTENT_SOLVED",
         solverPathData,
         {
           gasLimit:             5_000_000,
@@ -164,9 +164,9 @@ export class ExecutionAgent extends BaseAgent {
       );
       const receipt = await tx.wait();
 
-      this.logSuccess(`Intent #${sid} SOLVED on-chain! TxHash: ${receipt.hash.slice(0, 16)}...`);
-      this.log(`📜 On-chain Receipt now contains the solver's execution path proof.`);
-      this.log(`   Decode Receipt.resultData to verify: route, slippage, MEV protection.`);
+      this.logSuccess(`Intent #${sid} SOLVED! TxHash: ${receipt.hash.slice(0, 16)}...`);
+      this.log(`📜 MessageBus now contains the solver's execution path proof.`);
+      this.log(`   Decode the event data to verify: route, slippage, MEV protection.`);
 
       // Consume the signal on the MessageBus
       try {
