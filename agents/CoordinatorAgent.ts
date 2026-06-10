@@ -116,7 +116,8 @@ export class CoordinatorAgent extends BaseAgent {
     if (!this.running) return;
 
     try {
-      const coordinatorBalance = await this.wallet.provider!.getBalance(this.wallet.address);
+      const coordinatorAddress = await this.wallet.getAddress();
+      const coordinatorBalance = await this.wallet.provider!.getBalance(coordinatorAddress);
       
       for (const config of this.agentConfigs) {
         if (config.role === AgentRole.COORDINATOR) continue;
