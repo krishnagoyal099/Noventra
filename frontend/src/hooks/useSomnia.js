@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { JsonRpcProvider, Contract, formatEther, WebSocketProvider } from 'ethers';
+import { JsonRpcProvider, Contract, formatEther } from 'ethers';
 
 // Custom provider to fix Somnia's broken eth_getLogs returning null for 'removed'
 class SomniaProvider extends JsonRpcProvider {
@@ -100,11 +100,21 @@ export function useSomnia() {
       }
     };
 
-    // ─── Load historical signals from the last 999 blocks ───
-    const loadHistory = async () => {
+    // ─── Unified poll for SignalSent events (history + real-time) ───
+    // contract.on() requires WebSocket; Somnia RPC is HTTP-only so it never fires.
+    // We poll queryFilter every 10s, tracking the last seen block.
+    // First run looks back 5000 blocks (~83 min history at ~1 block/s on Somnia).
+    let lastCheckedBlock = 0;
+
+    const pollSignals = async () => {
       try {
         const currentBlock = await provider.getBlockNumber();
-        const fromBlock = Math.max(0, currentBlock - 999);
+        const fromBlock = lastCheckedBlock === 0
+          ? Math.max(0, currentBlock - 5000)
+          : lastCheckedBlock + 1;
+
+        if (fromBlock > currentBlock) return;
+
         const filter = messageBus.filters.SignalSent();
         const logs = await messageBus.queryFilter(filter, fromBlock, currentBlock);
 
@@ -120,38 +130,30 @@ export function useSomnia() {
         if (formatted.length > 0) {
           setReceipts(prev => [...formatted.reverse(), ...prev]);
         }
+
+        lastCheckedBlock = currentBlock;
       } catch (err) {
-        console.error("History load error:", err);
+        console.error("Signal poll error:", err);
       }
     };
 
-    // ─── Real-time listener: new signals appear instantly ───
-    let listenerIndex = 0;
-    const onSignal = (signalId, by, signalType, data, timestamp, eventObj) => {
-      const rawLog = { args: { by, signalType, data, timestamp }, transactionHash: eventObj?.log?.transactionHash };
-      const receipt = formatLog(rawLog, messageBus, listenerIndex++);
-      if (!receipt) return;
-      if (seenIds.current.has(receipt.id)) return;
-      seenIds.current.add(receipt.id);
-      setReceipts(prev => [receipt, ...prev]);
-    };
-
-    messageBus.on("SignalSent", onSignal);
-
     fetchStats();
     fetchCoordinator();
-    loadHistory();
+    pollSignals();
 
     const statsInterval = setInterval(() => {
       fetchStats();
       fetchCoordinator();
     }, 5000);
 
+    const signalInterval = setInterval(pollSignals, 10_000);
+
     return () => {
       clearInterval(statsInterval);
-      messageBus.removeAllListeners("SignalSent");
+      clearInterval(signalInterval);
     };
   }, []);
+
 
   return { liquidity, receipts, strategyCount, loading, error, coordinatorAddress, coordinatorBalance };
 }
