@@ -17,6 +17,7 @@ COPY agents/       ./agents/
 COPY interfaces/   ./interfaces/
 COPY scripts/      ./scripts/
 COPY contracts/    ./contracts/
+COPY deployments/  ./deployments/
 COPY hardhat.config.ts ./
 
 # Compile contracts (needed for ABI resolution in agents)
@@ -35,6 +36,7 @@ COPY --from=builder /app/agents          ./agents
 COPY --from=builder /app/interfaces      ./interfaces
 COPY --from=builder /app/scripts         ./scripts
 COPY --from=builder /app/contracts       ./contracts
+COPY --from=builder /app/deployments     ./deployments
 COPY --from=builder /app/hardhat.config.ts ./
 COPY --from=builder /app/tsconfig.json   ./
 COPY --from=builder /app/package.json    ./
