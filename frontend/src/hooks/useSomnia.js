@@ -101,22 +101,42 @@ export function useSomnia() {
     };
 
     // ─── Unified poll for SignalSent events (history + real-time) ───
-    // contract.on() requires WebSocket; Somnia RPC is HTTP-only so it never fires.
-    // We poll queryFilter every 10s, tracking the last seen block.
-    // First run looks back 5000 blocks (~83 min history at ~1 block/s on Somnia).
+    // Somnia RPC hard-caps eth_getLogs at 1000 blocks per request.
+    // On first run we walk back 3000 blocks in 999-block chunks to load history.
+    // On subsequent runs we only query the new blocks since lastCheckedBlock (always < 1000).
     let lastCheckedBlock = 0;
+
+    const queryChunked = async (filter, from, to) => {
+      const CHUNK = 999;
+      const allLogs = [];
+      for (let start = from; start <= to; start += CHUNK) {
+        const end = Math.min(start + CHUNK - 1, to);
+        try {
+          const chunk = await messageBus.queryFilter(filter, start, end);
+          allLogs.push(...chunk);
+        } catch (e) {
+          console.warn(`queryFilter chunk ${start}-${end} failed:`, e.message?.slice(0, 60));
+        }
+      }
+      return allLogs;
+    };
 
     const pollSignals = async () => {
       try {
         const currentBlock = await provider.getBlockNumber();
-        const fromBlock = lastCheckedBlock === 0
-          ? Math.max(0, currentBlock - 5000)
-          : lastCheckedBlock + 1;
+
+        let fromBlock;
+        if (lastCheckedBlock === 0) {
+          // First run: load up to 3000 blocks of history in chunks
+          fromBlock = Math.max(0, currentBlock - 3000);
+        } else {
+          fromBlock = lastCheckedBlock + 1;
+        }
 
         if (fromBlock > currentBlock) return;
 
         const filter = messageBus.filters.SignalSent();
-        const logs = await messageBus.queryFilter(filter, fromBlock, currentBlock);
+        const logs = await queryChunked(filter, fromBlock, currentBlock);
 
         const formatted = logs
           .map((log, i) => formatLog(log, messageBus, i))
@@ -136,6 +156,7 @@ export function useSomnia() {
         console.error("Signal poll error:", err);
       }
     };
+
 
     fetchStats();
     fetchCoordinator();
